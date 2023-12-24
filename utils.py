@@ -98,9 +98,9 @@ def generate_train(X, y, image_path, data_path):
       image_filename_id = f"image_train_{n}"
       image_filename_path = f"{image_path}/image_train_{n}.png"
 
-      combined_signal_string = [str(i) for i in X[n][0].tolist()]
-      question = f"Is the following signal from lead one or lead two? {combined_signal_string}".replace("\'", "")
-      target = "Lead One" if int(y[n]) == 1 else "Lead Two"
+      combined_signal_string = [f'{np.round(i, 6):.6f}' for i in X[n][0].tolist()]
+      question = f"Which class is the following signal from? {combined_signal_string}".replace("\'", "")
+      target = str(y[n])
 
       ### CREATE DATA ENTRY
       entries.append(generate_llava_qa_entry(question, target, image_filename_id, image_filename_path))
@@ -123,9 +123,9 @@ def generate_test(X, y, image_path, data_path):
       image_filename_id = f"image_test_{n}"
       image_filename_path = f"{image_path}/image_test_{n}.png"
 
-      combined_signal_string = [str(i) for i in X[n][0].tolist()]
-      question = f"Is the following signal from lead one or lead two? {combined_signal_string}".replace("\'", "")
-      target = "Lead One" if int(y[n]) == 1 else "Lead Two"
+      combined_signal_string = [f'{np.round(i, 6):.6f}' for i in X[n][0].tolist()]
+      question = f"Which class is the following signal from? {combined_signal_string}".replace("\'", "")
+      target = str(y[n])
 
       ### CREATE DATA ENTRY
       entries.append(generate_llava_eval_entry(question, target, image_filename_id, image_filename_path))
