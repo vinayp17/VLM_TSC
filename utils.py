@@ -8,6 +8,8 @@ from scipy.signal import decimate, medfilt, gaussian
 from scipy.ndimage import uniform_filter1d
 from scipy.interpolate import interp1d
 
+from sklearn.model_selection import train_test_split
+
 
 def downsample(X):
     # Downsampling factor
@@ -38,7 +40,7 @@ def downsample(X):
     # interpolated_downsampled = interp(resampled_t)
 
 
-def generate_llava_entry(question, target, image_filename_id, image_filename_path):
+def generate_llava_qa_entry(question, target, image_filename_id, image_filename_path):
 
     entry = {
         "id": image_filename_id,
@@ -53,6 +55,16 @@ def generate_llava_entry(question, target, image_filename_id, image_filename_pat
                 "value": target
             }
         ]
+    }
+    return entry
+
+def generate_llava_eval_entry(question, target, image_filename_id, image_filename_path):
+
+    entry = {
+        "question_id": image_filename_id,
+        "image": image_filename_path,
+        "text": question,
+        "output": target,
     }
     return entry
 
@@ -78,37 +90,67 @@ def generate_line_graph(X, image_filename_path):
     plt.close()
 
 
-def generate_ucr_data(dataset, split, image_path, data_path, extract_path='~/Downloads/UCRArchive_2018/'):
+def generate_train(X, y, image_path, data_path):
+
+  entries = []
+
+  for n in range(0, len(y)):
+      image_filename_id = f"image_train_{n}"
+      image_filename_path = f"{image_path}/image_train_{n}.png"
+
+      combined_signal_string = [str(i) for i in X[n][0].tolist()]
+      question = f"Is the following signal from lead one or lead two? {combined_signal_string}".replace("\'", "")
+      target = "Lead One" if int(y[n]) == 1 else "Lead Two"
+
+      ### CREATE DATA ENTRY
+      entries.append(generate_llava_qa_entry(question, target, image_filename_id, image_filename_path))
+
+      ### CREATE IMAGE ENTRY
+      generate_line_graph(X[n][0], image_filename_path)
+
+  json_output = json.dumps(entries, indent=2)
+
+  # Write to a file
+  with open(f'{data_path}/train.json', 'w') as file:
+      file.write(json_output)
+
+
+def generate_test(X, y, image_path, data_path):
+
+  entries = []
+
+  for n in range(0, len(y)):
+      image_filename_id = f"image_test_{n}"
+      image_filename_path = f"{image_path}/image_test_{n}.png"
+
+      combined_signal_string = [str(i) for i in X[n][0].tolist()]
+      question = f"Is the following signal from lead one or lead two? {combined_signal_string}".replace("\'", "")
+      target = "Lead One" if int(y[n]) == 1 else "Lead Two"
+
+      ### CREATE DATA ENTRY
+      entries.append(generate_llava_eval_entry(question, target, image_filename_id, image_filename_path))
+
+      ### CREATE IMAGE ENTRY
+      generate_line_graph(X[n][0], image_filename_path)
+
+  # Write to a file
+  with open(f'{data_path}/test.jsonl', 'w') as file:
+    for dictionary in entries:
+      json_string = json.dumps(dictionary)
+      file.write(json_string + '\n')
+
+def generate_ucr_data(dataset, image_path, data_path, extract_path='~/Downloads/UCRArchive_2018/'):
 
     X, y, meta = load_classification(
-        dataset, extract_path=extract_path, split=split, return_metadata=True
+        dataset, return_metadata=True
     )
 
-    entries = []
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    for n in range(0, len(y)):
-        image_filename_id = f"image_{split}_{n}"
-        image_filename_path = f"{image_path}/image_{split}_{n}.png"
-
-        combined_signal_string = [str(i) for i in X[n][0].tolist()]
-        question = f"Which class is the following signal? {combined_signal_string}".replace("\'", "")
-        target = int(y[n])
-
-        ### CREATE DATA ENTRY
-        entries.append(generate_llava_entry(question, target, image_filename_id, image_filename_path))
-
-        ### CREATE IMAGE ENTRY
-        generate_line_graph(X[n][0], image_filename_path)
-
-    json_output = json.dumps(entries, indent=2)
-
-    # Write to a file
-    with open(f'{data_path}/output.json', 'w') as file:
-        file.write(json_output)
+    generate_train(X_train, y_train, image_path, data_path)
+    generate_test(X_test, y_test, image_path, data_path)
 
 
-
-generate_ucr_data('TwoLeadECG', 'TRAIN', '.', '.', extract_path='~/Downloads/UCRArchive_2018/')
 
 
 
