@@ -142,7 +142,7 @@ def generate_data(X, y, image_path, data_path, split, model):
         target = str(y[n])
 
         entries.append(generate_data_entry(split, model, question, target, image_filename_id, image_filename_path))
-        #generate_graph(X[n][0], image_filename_path)
+        generate_graph(X[n][0], image_filename_path)
 
     if split == "train":
         json_output = json.dumps(entries, indent=2)
