@@ -4,11 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import json
 
-from scipy.signal import decimate, medfilt, gaussian
-from scipy.ndimage import uniform_filter1d
-from scipy.interpolate import interp1d
-
 from sklearn.model_selection import train_test_split
+import argparse
 
 
 def generate_llava_qa_entry(question, target, image_filename_id, image_filename_path):
