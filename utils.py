@@ -11,35 +11,6 @@ from scipy.interpolate import interp1d
 from sklearn.model_selection import train_test_split
 
 
-def downsample(X):
-    # Downsampling factor
-    factor = 5
-
-    # 1. Simple Subsampling (Decimation)
-    simple_subsampling = X[::factor]
-
-    # 2. Averaging
-    average_downsampled = uniform_filter1d(X, size=factor)[::factor]
-
-    # 3. Low-pass Filtering followed by Decimation
-    lpf_downsampled = decimate(X, factor, ftype='fir')
-
-    # 4. Max Pooling
-    max_pooling = np.max(X.reshape(-1, factor), axis=1)
-
-    # 5. Median Filtering
-    median_filtered = medfilt(X, kernel_size=factor)[::factor]
-
-    # 6. Gaussian Downsampling
-    gaussian_filter = gaussian(factor, std=2)
-    gaussian_downsampled = np.convolve(X, gaussian_filter, mode='same')[::factor]
-
-    # 7. Resampling with Interpolation
-    # interp = interp1d(np.arange(len(X)), original_series, kind='cubic')
-    # resampled_t = np.linspace(0, length-1, length // factor)
-    # interpolated_downsampled = interp(resampled_t)
-
-
 def generate_llava_qa_entry(question, target, image_filename_id, image_filename_path):
 
     entry = {
@@ -68,10 +39,31 @@ def generate_llava_eval_entry(question, target, image_filename_id, image_filenam
     }
     return entry
 
-def generate_line_graph(X, image_filename_path):
+def generate_qwen_vl_entry(question, target, image_filename_id, image_filename_path):
+
+    entry = {
+      "id": image_filename_id,
+      "conversations": [
+        {
+          "from": "user",
+          "value": f"Picture 1: <img>{image_filename_path}</img>\n{question}"
+        },
+        {
+          "from": "assistant",
+          "value": target
+        }
+      ]
+    }
+    return entry
+
+def generate_graph(X, image_filename_path, style="line"):
 
     plt.figure(figsize=(4,4))
-    plt.plot(X)
+
+    if style == "line":
+      plt.plot(X)
+    elif style == "area":
+      plt.stackplot(range(0, len(X)), X)
 
     plt.tick_params(axis='x', length=0)
     plt.tick_params(axis='y', length=0)
@@ -89,66 +81,65 @@ def generate_line_graph(X, image_filename_path):
     plt.savefig(image_filename_path, format='png', bbox_inches='tight', pad_inches=0)
     plt.close()
 
+def generate_llava_data(X, y, image_path, data_path. split, model):
 
-def generate_train(X, y, image_path, data_path):
+    entries = []
 
-  entries = []
+    for n in range(0, len(y)):
+        image_filename_id = f"image_train_{n}"
+        image_filename_path = f"{image_path}/image_train_{n}.png"
+        combined_signal_string = [f'{np.round(i, 6):.6f}' for i in X[n][0].tolist()]
+        question = f"Which class is the following signal from? {combined_signal_string}".replace("\'", "")
+        target = str(y[n])
 
-  for n in range(0, len(y)):
-      image_filename_id = f"image_train_{n}"
-      image_filename_path = f"{image_path}/image_train_{n}.png"
+        if split == "train":
+            if model == "llava":
+                entries.append(generate_llava_qa_entry(question, target, image_filename_id, image_filename_path))
+            else:
+                entries.append(generate_qwen_vl_entry(question, target, image_filename_id, image_filename_path))
+        else:
+            if model == "llava":
+                entries.append(generate_llava_eval_entry(question, target, image_filename_id, image_filename_path))
+            else:
+                entries.append(generate_qwen_vl_entry(question, target, image_filename_id, image_filename_path))
 
-      combined_signal_string = [f'{np.round(i, 6):.6f}' for i in X[n][0].tolist()]
-      question = f"Which class is the following signal from? {combined_signal_string}".replace("\'", "")
-      target = str(y[n])
+        generate_graph(X[n][0], image_filename_path)
 
-      ### CREATE DATA ENTRY
-      entries.append(generate_llava_qa_entry(question, target, image_filename_id, image_filename_path))
+    if split == "train":
+        json_output = json.dumps(entries, indent=2)
+        # Write to a file
+        with open(f'{data_path}/train.json', 'w') as file:
+            file.write(json_output)
 
-      ### CREATE IMAGE ENTRY
-      generate_line_graph(X[n][0], image_filename_path)
-
-  json_output = json.dumps(entries, indent=2)
-
-  # Write to a file
-  with open(f'{data_path}/train.json', 'w') as file:
-      file.write(json_output)
+    else:
+        # Write to a file
+        with open(f'{data_path}/test.jsonl', 'w') as file:
+            for dictionary in entries:
+                json_string = json.dumps(dictionary)
+                file.write(json_string + '\n')
 
 
-def generate_test(X, y, image_path, data_path):
-
-  entries = []
-
-  for n in range(0, len(y)):
-      image_filename_id = f"image_test_{n}"
-      image_filename_path = f"{image_path}/image_test_{n}.png"
-
-      combined_signal_string = [f'{np.round(i, 6):.6f}' for i in X[n][0].tolist()]
-      question = f"Which class is the following signal from? {combined_signal_string}".replace("\'", "")
-      target = str(y[n])
-
-      ### CREATE DATA ENTRY
-      entries.append(generate_llava_eval_entry(question, target, image_filename_id, image_filename_path))
-
-      ### CREATE IMAGE ENTRY
-      generate_line_graph(X[n][0], image_filename_path)
-
-  # Write to a file
-  with open(f'{data_path}/test.jsonl', 'w') as file:
-    for dictionary in entries:
-      json_string = json.dumps(dictionary)
-      file.write(json_string + '\n')
-
-def generate_ucr_data(dataset, image_path, data_path, extract_path='~/Downloads/UCRArchive_2018/'):
-
-    X, y, meta = load_classification(
-        dataset, return_metadata=True
-    )
-
+def generate_ucr_data(dataset, image_path, data_path, model, extract_path='~/Downloads/UCRArchive_2018/'):
+    X, y, meta = load_classification(dataset, return_metadata=True)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    generate_llava_data(X_train, y_train, image_path, data_path, "train", model)
+    generate_llava_data(X_test, y_test, image_path, data_path, "test", model)
 
-    generate_train(X_train, y_train, image_path, data_path)
-    generate_test(X_test, y_test, image_path, data_path)
+def main():
+    parser = argparse.ArgumentParser(description='Generate UCR Data')
+    parser.add_argument('dataset', type=str, help='Name of the dataset')
+    parser.add_argument('image_path', type=str, help='Path to save images')
+    parser.add_argument('data_path', type=str, help='Path to save data')
+    parser.add_argument('model', type=str, help='Model to use')
+    parser.add_argument('--extract_path', type=str, default='~/Downloads/UCRArchive_2018/', help='Path to extract data')
+
+    args = parser.parse_args()
+
+    generate_ucr_data(args.dataset, args.image_path, args.data_path, args.model, args.extract_path)
+
+if __name__ == '__main__':
+    main()
+
 
 
 
