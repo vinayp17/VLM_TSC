@@ -135,9 +135,9 @@ def generate_data(X, y, image_path, data_path, split, model):
     entries = []
 
     for n in range(0, len(y)):
-        image_filename_id = f"image_train_{n}"
-        image_filename_path = f"{image_path}/image_train_{n}.png"
-        combined_signal_string = format_numbers_combined(downsample(X[n][0], factor=5), round_to=4)
+        image_filename_id = f"image_{split}_{n}"
+        image_filename_path = f"{image_path}/image_{split}_{n}.png"
+        combined_signal_string = format_numbers_combined(X[n][0], round_to=4)
         question = f"Which class is the following signal from? {combined_signal_string}".replace("\'", "")
         target = str(y[n])
 
