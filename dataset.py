@@ -17,9 +17,9 @@ from multiprocessing import Pool
 import pandas as pd
 
 
-def process_chunk(chunk_data, image_path, padded, round_to, downsample_to):
+def process_chunk(chunk_data, image_path, max_precision, padded, round_to, downsample_to):
     data_subset, label_subset, index_subset, = chunk_data
-    return generate_data(data_subset, label_subset, index_subset, image_path, padded, round_to, downsample_to)
+    return generate_data(data_subset, label_subset, index_subset, image_path, max_precision, padded, round_to, downsample_to)
 
 class UCRDataSet():
     def __init__(self, dataset, image_path, data_path):
@@ -34,22 +34,24 @@ class UCRDataSet():
         self.X, self.y, meta = load_classification(dataset, return_metadata=True)
 
     def multiprocessing(self, X, y):
+        max_precision = max(len(str(num).split('.')[1]) if '.' in str(num) else 0 for num in self.X.flatten().tolist())
+
         chunk_size = len(X)//5  
 
         chunks = [(X[i:i + chunk_size], y[i:i + chunk_size], range(i, i+chunk_size, 1)) for i in range(0, len(X), chunk_size)]
 
         with Pool() as pool:
             from functools import partial
-            func = partial(process_chunk, image_path=self.image_path, padded=self.padded, round_to=self.round_to, downsample_to=self.downsample_to)
+            func = partial(process_chunk, image_path=self.image_path, max_precision=max_precision, padded=self.padded, round_to=self.round_to, downsample_to=self.downsample_to)
             results = pool.map(func, chunks)
 
         return pd.concat(results, axis=0)
     
 
     def generate_data_splits(self, model):
-        mean = np.mean(self.X, axis=0)
-        std = np.std(self.X, axis=0)
-        self.X = (self.X - mean) / std
+        # mean = np.mean(self.X, axis=0)
+        # std = np.std(self.X, axis=0)
+        # self.X = (self.X - mean) / std
 
         df = self.multiprocessing(self.X, self.y)
 

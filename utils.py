@@ -123,13 +123,12 @@ def downsample(X, factor=2):
     # interpolated_downsampled = interp(resampled_t)
 
 
-def format_numbers_combined(numbers, padded=False, round_to=None):
+def format_numbers_combined(numbers, max_precision, padded=False, round_to=None):
     if round_to:
         numbers = [np.round(i, round_to) for i in numbers]
 
-    if padded:
-        max_decimal_places = max(len(str(num).split('.')[1]) if '.' in str(num) else 0 for num in numbers)
-        formatted_numbers = [f"{num:.{max_decimal_places}f}" for num in numbers]
+    if padded == True:
+        formatted_numbers = [f"{num:.{max_precision}f}" for num in numbers]
         #max_length = max(len(num) for num in intermediate_numbers if "-" not in num)
         #formatted_numbers = [f"{num:0>{max_length}}" for num in intermediate_numbers] # formatted_numbers = [f"+{num:0>{max_length}}" if "-" not in num else f"{num:0>{max_length}}" for num in intermediate_numbers]
     else:
@@ -137,7 +136,7 @@ def format_numbers_combined(numbers, padded=False, round_to=None):
 
     return formatted_numbers
 
-def generate_data(X, y, index, image_path, padded, round_to, downsample_to):
+def generate_data(X, y, index, image_path, max_precision, padded, round_to, downsample_to):
     
     df = pd.DataFrame(columns=['question', 'target', 'image_filename_id', 'image_filename_path'])
 
@@ -145,7 +144,7 @@ def generate_data(X, y, index, image_path, padded, round_to, downsample_to):
         image_filename_id = f"image_{index[n]}"
         image_filename_path = f"{image_path}/image_{index[n]}.png"
 
-        combined_signal_string = format_numbers_combined(downsample(X[n][0], factor=downsample_to), padded=padded, round_to=round_to)
+        combined_signal_string = format_numbers_combined(downsample(X[n][0], factor=downsample_to), max_precision, padded=padded, round_to=round_to)
         question = f"Which class is the following signal from? {combined_signal_string}".replace("\'", "")
         target = str(y[n])
 
