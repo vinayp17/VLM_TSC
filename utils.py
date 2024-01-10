@@ -11,6 +11,8 @@ from scipy.signal import decimate, medfilt, gaussian
 from scipy.ndimage import uniform_filter1d
 from scipy.interpolate import interp1d
 
+import pandas as pd
+
 def generate_llava_qa_entry(question, target, image_filename_id, image_filename_path):
 
     entry = {
@@ -132,83 +134,26 @@ def format_numbers_combined(numbers, round_to=None):
 
     return formatted_numbers
 
-def generate_data(X, y, image_path, data_path, split, model, round_to, downsample_to):
-
-    entries = []
+def generate_data(X, y, index, image_path, round_to, downsample_to):
+    
+    df = pd.DataFrame(columns=['question', 'target', 'image_filename_id', 'image_filename_path'])
 
     for n in range(0, len(y)):
-        image_filename_id = f"image_{split}_{n}"
-        image_filename_path = f"{image_path}/image_{split}_{n}.png"
+        image_filename_id = f"image_{index[n]}"
+        image_filename_path = f"{image_path}/image_{index[n]}.png"
 
         combined_signal_string = format_numbers_combined(downsample(X[n][0], factor=downsample_to), round_to=round_to)
         question = f"Which class is the following signal from? {combined_signal_string}".replace("\'", "")
         target = str(y[n])
 
-        entries.append(generate_data_entry(split, model, question, target, image_filename_id, image_filename_path))
         generate_graph(X[n][0], image_filename_path)
 
-    return entries
+        df.loc[n] = [question, target, image_filename_id, image_filename_path]
+    
+
+    return df
 
 
-
-# def generate_ucr_data(dataset, image_path, data_path, model, round_to, downsample_to, extract_path='~/Downloads/UCRArchive_2018/'):
-#     X, y, meta = load_classification(dataset, return_metadata=True)
-#     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    # print(len(X))
-    # generate_data(X_train, y_train, image_path, data_path, "train", model, round_to, downsample_to)
-    # generate_data(X_test, y_test, image_path, data_path, "test", model, round_to, downsample_to)
-
-
-from multiprocessing import Pool
-
-# Define process_chunk at the module level
-def process_chunk(chunk_data, image_path, data_path, model, round_to, downsample_to):
-    data_subset, label_subset, subset_name = chunk_data
-    return generate_data(data_subset, label_subset, image_path, data_path, subset_name, model, round_to, downsample_to)
-
-def generate_ucr_data(dataset, image_path, data_path, model, round_to, downsample_to, extract_path='~/Downloads/UCRArchive_2018/'):
-    X, y, meta = load_classification(dataset, return_metadata=True)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-    # Creating chunks
-    chunk_size = len(X_train)//5  # Adjust based on your data
-    train_chunks = [(X_train[i:i + chunk_size], y_train[i:i + chunk_size], 'train') for i in range(0, len(X_train), chunk_size)]
-    test_chunks = [(X_test[i:i + chunk_size], y_test[i:i + chunk_size], 'test') for i in range(0, len(X_test), chunk_size)]
-    all_chunks = train_chunks + test_chunks
-
-    # Using Pool to parallelize
-
-    with Pool() as pool:
-        # Create a partial function to include additional arguments
-        from functools import partial
-        func = partial(process_chunk, image_path=image_path, data_path=data_path, model=model, round_to=round_to, downsample_to=downsample_to)
-        results = pool.map(func, all_chunks)
-
-    flattened_results = [item for sublist in results for item in sublist]
-
-        
-
-# Rest of your code...
-
-
-
-def main():
-    parser = argparse.ArgumentParser(description='Generate UCR Data')
-    parser.add_argument('dataset', type=str, help='Name of the dataset')
-    parser.add_argument('image_path', type=str, help='Path to save images')
-    parser.add_argument('data_path', type=str, help='Path to save data')
-    parser.add_argument('model', type=str, help='Model to use')
-    parser.add_argument('--round_to', type=int, default=None, help='Round To')
-    parser.add_argument('--downsample_to', type=int, default=None, help='Downsample To')
-    parser.add_argument('--extract_path', type=str, default='~/Downloads/UCRArchive_2018/', help='Path to extract data')
-
-
-    args = parser.parse_args()
-
-    generate_ucr_data(args.dataset, args.image_path, args.data_path, args.model, args.round_to, args.downsample_to, args.extract_path)
-
-if __name__ == '__main__':
-    main()
 
 
 
