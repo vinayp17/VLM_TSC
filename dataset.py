@@ -17,9 +17,9 @@ from multiprocessing import Pool
 import pandas as pd
 
 
-def process_chunk(chunk_data, image_path, round_to, downsample_to):
+def process_chunk(chunk_data, image_path, padded, round_to, downsample_to, x_max, x_min):
     data_subset, label_subset, index_subset, = chunk_data
-    return generate_data(data_subset, label_subset, index_subset, image_path, round_to, downsample_to)
+    return generate_data(data_subset, label_subset, index_subset, image_path, padded, round_to, downsample_to, x_max, x_min)
 
 class UCRDataSet():
     def __init__(self, dataset, image_path, data_path):
@@ -29,17 +29,24 @@ class UCRDataSet():
 
         self.round_to = None
         self.downsample_to = None
+        self.padded = False
 
         self.X, self.y, meta = load_classification(dataset, return_metadata=True)
 
     def multiprocessing(self, X, y):
         chunk_size = len(X)//5  
-   
+
+        Q1 = np.percentile(X, 25)
+        Q3 = np.percentile(X, 75)
+        IQR = Q3 - Q1
+        lower_limit = Q1 - IQR
+        upper_limit = Q3 + IQR
+
         chunks = [(X[i:i + chunk_size], y[i:i + chunk_size], range(i, i+chunk_size, 1)) for i in range(0, len(X), chunk_size)]
 
         with Pool() as pool:
             from functools import partial
-            func = partial(process_chunk, image_path=self.image_path, round_to=self.round_to, downsample_to=self.downsample_to)
+            func = partial(process_chunk, image_path=self.image_path, padded=self.padded, round_to=self.round_to, downsample_to=self.downsample_to, x_max=upper_limit, x_min=lower_limit)
             results = pool.map(func, chunks)
 
         return pd.concat(results, axis=0)
@@ -69,6 +76,7 @@ def main():
     parser.add_argument('image_path', type=str, help='Path to save images')
     parser.add_argument('data_path', type=str, help='Path to save data')
     parser.add_argument('model', type=str, help='Model to use')
+    parser.add_argument('--padded', type=bool, default=False, help='Pad Numbers')
     parser.add_argument('--round_to', type=int, default=None, help='Round To')
     parser.add_argument('--downsample_to', type=int, default=None, help='Downsample To')
 
@@ -77,6 +85,7 @@ def main():
     dataset = UCRDataSet(args.dataset, args.image_path, args.data_path)
     dataset.round_to = args.round_to
     dataset.downsample_to = args.downsample_to
+    dataset.padded = args.padded
 
     
     dataset.generate_data_splits(model=args.model)
