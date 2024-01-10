@@ -17,9 +17,9 @@ from multiprocessing import Pool
 import pandas as pd
 
 
-def process_chunk(chunk_data, image_path, padded, round_to, downsample_to, x_max, x_min):
+def process_chunk(chunk_data, image_path, padded, round_to, downsample_to):
     data_subset, label_subset, index_subset, = chunk_data
-    return generate_data(data_subset, label_subset, index_subset, image_path, padded, round_to, downsample_to, x_max, x_min)
+    return generate_data(data_subset, label_subset, index_subset, image_path, padded, round_to, downsample_to)
 
 class UCRDataSet():
     def __init__(self, dataset, image_path, data_path):
@@ -36,23 +36,21 @@ class UCRDataSet():
     def multiprocessing(self, X, y):
         chunk_size = len(X)//5  
 
-        Q1 = np.percentile(X, 25)
-        Q3 = np.percentile(X, 75)
-        IQR = Q3 - Q1
-        lower_limit = Q1 - IQR
-        upper_limit = Q3 + IQR
-
         chunks = [(X[i:i + chunk_size], y[i:i + chunk_size], range(i, i+chunk_size, 1)) for i in range(0, len(X), chunk_size)]
 
         with Pool() as pool:
             from functools import partial
-            func = partial(process_chunk, image_path=self.image_path, padded=self.padded, round_to=self.round_to, downsample_to=self.downsample_to, x_max=upper_limit, x_min=lower_limit)
+            func = partial(process_chunk, image_path=self.image_path, padded=self.padded, round_to=self.round_to, downsample_to=self.downsample_to)
             results = pool.map(func, chunks)
 
         return pd.concat(results, axis=0)
     
 
     def generate_data_splits(self, model):
+        mean = np.mean(self.X, axis=0)
+        std = np.std(self.X, axis=0)
+        self.X = (self.X - mean) / std
+
         df = self.multiprocessing(self.X, self.y)
 
         train_set, test_set = train_test_split(df, test_size=0.2, random_state=42)

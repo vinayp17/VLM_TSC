@@ -67,7 +67,7 @@ def generate_data_entry(split, model, question, target, image_filename_id, image
     else:
         return generate_qwen_vl_entry(question, target, image_filename_id, image_filename_path)
 
-def generate_graph(X, image_filename_path, x_max, x_min, style="line"):
+def generate_graph(X, image_filename_path, style="line"):
 
     plt.figure(figsize=(4,4))
 
@@ -76,21 +76,18 @@ def generate_graph(X, image_filename_path, x_max, x_min, style="line"):
     elif style == "area":
       plt.stackplot(range(0, len(X)), X)
 
+    plt.tick_params(axis='x', length=0)
+    plt.tick_params(axis='y', length=0)
+    plt.xticks([])
+    plt.yticks([])
 
-    plt.ylim(x_max, x_min)
+    ax = plt.gca()
 
-    # plt.tick_params(axis='x', length=0)
-    # plt.tick_params(axis='y', length=0)
-    # plt.xticks([])
-    # plt.yticks([])
-
-    # ax = plt.gca()
-
-    # # Hide the top and right spines
-    # ax.spines['right'].set_visible(False)
-    # ax.spines['top'].set_visible(False)
-    # ax.spines['bottom'].set_visible(False)
-    # ax.spines['left'].set_visible(False)
+    # Hide the top and right spines
+    ax.spines['right'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_visible(False)
 
     plt.savefig(image_filename_path, format='png', bbox_inches='tight', pad_inches=0)
     plt.close()
@@ -132,15 +129,15 @@ def format_numbers_combined(numbers, padded=False, round_to=None):
 
     if padded:
         max_decimal_places = max(len(str(num).split('.')[1]) if '.' in str(num) else 0 for num in numbers)
-        intermediate_numbers = [f"{num:.{max_decimal_places}f}" for num in numbers]
-        max_length = max(len(num) for num in intermediate_numbers if "-" not in num)
-        formatted_numbers = [f"{num:0>{max_length}}" for num in intermediate_numbers] # formatted_numbers = [f"+{num:0>{max_length}}" if "-" not in num else f"{num:0>{max_length}}" for num in intermediate_numbers]
+        formatted_numbers = [f"{num:.{max_decimal_places}f}" for num in numbers]
+        #max_length = max(len(num) for num in intermediate_numbers if "-" not in num)
+        #formatted_numbers = [f"{num:0>{max_length}}" for num in intermediate_numbers] # formatted_numbers = [f"+{num:0>{max_length}}" if "-" not in num else f"{num:0>{max_length}}" for num in intermediate_numbers]
     else:
         formatted_numbers = [str(num) for num in numbers]
 
     return formatted_numbers
 
-def generate_data(X, y, index, image_path, padded, round_to, downsample_to, x_max, x_min):
+def generate_data(X, y, index, image_path, padded, round_to, downsample_to):
     
     df = pd.DataFrame(columns=['question', 'target', 'image_filename_id', 'image_filename_path'])
 
@@ -152,7 +149,7 @@ def generate_data(X, y, index, image_path, padded, round_to, downsample_to, x_ma
         question = f"Which class is the following signal from? {combined_signal_string}".replace("\'", "")
         target = str(y[n])
 
-        generate_graph(X[n][0], image_filename_path, x_max, x_min)
+        generate_graph(X[n][0], image_filename_path)
 
         df.loc[n] = [question, target, image_filename_id, image_filename_path]
     
