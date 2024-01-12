@@ -34,9 +34,9 @@ class UCRDataSet():
         self.X, self.y, meta = load_classification(dataset, return_metadata=True)
 
     def multiprocessing(self, X, y):
-        max_precision = max(len(str(num).split('.')[1]) if '.' in str(num) else 0 for num in self.X.flatten().tolist())
+        max_precision = max(len(str(num).split('.')[1]) if '.' in str(num) else 0 for num in X.flatten().tolist())
 
-        chunk_size = len(X)//5  
+        chunk_size = len(X)//6
 
         chunks = [(X[i:i + chunk_size], y[i:i + chunk_size], range(i, i+chunk_size, 1)) for i in range(0, len(X), chunk_size)]
 
@@ -47,7 +47,6 @@ class UCRDataSet():
 
         return pd.concat(results, axis=0)
     
-
     def generate_data_splits(self, model):
         # mean = np.mean(self.X, axis=0)
         # std = np.std(self.X, axis=0)

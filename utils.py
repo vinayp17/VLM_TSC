@@ -144,7 +144,7 @@ def generate_data(X, y, index, image_path, max_precision, padded, round_to, down
         image_filename_id = f"image_{index[n]}"
         image_filename_path = f"{image_path}/image_{index[n]}.png"
 
-        combined_signal_string = format_numbers_combined(downsample(X[n][0], factor=downsample_to), max_precision, padded=padded, round_to=round_to)
+        combined_signal_string = format_numbers_combined(X[n][0], max_precision, padded=padded, round_to=round_to)
         question = f"Which class is the following signal from? {combined_signal_string}".replace("\'", "")
         target = str(y[n])
 
