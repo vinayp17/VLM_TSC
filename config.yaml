@@ -1,0 +1,13 @@
+dataset:
+  name: 'CBF'  # Replace with actual dataset name
+
+image_path: '.'  # Replace with actual image path
+
+data_path: '.'  # Replace with actual data path
+
+model: 'llava'  # Replace with the model name
+
+options:
+  padded: False  # Set to True if padding is needed
+  round_to: 2  # Replace with an integer if rounding is needed, else keep as null
+  downsample_to: None # Replace with an integer if downsampling is needed, else keep as null
