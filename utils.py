@@ -127,12 +127,7 @@ def format_numbers_combined(numbers, max_precision, padded=False, round_to=None)
     if round_to:
         numbers = [np.round(i, round_to) for i in numbers]
 
-    if padded == True:
-        formatted_numbers = [f"{num:.{max_precision}f}" for num in numbers]
-        #max_length = max(len(num) for num in intermediate_numbers if "-" not in num)
-        #formatted_numbers = [f"{num:0>{max_length}}" for num in intermediate_numbers] # formatted_numbers = [f"+{num:0>{max_length}}" if "-" not in num else f"{num:0>{max_length}}" for num in intermediate_numbers]
-    else:
-        formatted_numbers = [str(num) for num in numbers]
+    formatted_numbers = [str(num) for num in numbers]
 
     return formatted_numbers
 

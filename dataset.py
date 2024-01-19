@@ -16,6 +16,8 @@ from multiprocessing import Pool
 
 import pandas as pd
 
+import yaml
+
 
 def process_chunk(chunk_data, image_path, max_precision, padded, round_to, downsample_to):
     data_subset, label_subset, index_subset, = chunk_data
@@ -70,24 +72,42 @@ class UCRDataSet():
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Generate UCR Data')
-    parser.add_argument('dataset', type=str, help='Name of the dataset')
-    parser.add_argument('image_path', type=str, help='Path to save images')
-    parser.add_argument('data_path', type=str, help='Path to save data')
-    parser.add_argument('model', type=str, help='Model to use')
-    parser.add_argument('--padded', type=bool, default=False, help='Pad Numbers')
-    parser.add_argument('--round_to', type=int, default=None, help='Round To')
-    parser.add_argument('--downsample_to', type=int, default=None, help='Downsample To')
+    # parser = argparse.ArgumentParser(description='Generate UCR Data')
+    # parser.add_argument('dataset', type=str, help='Name of the dataset')
+    # parser.add_argument('image_path', type=str, help='Path to save images')
+    # parser.add_argument('data_path', type=str, help='Path to save data')
+    # parser.add_argument('model', type=str, help='Model to use')
+    # parser.add_argument('--padded', type=bool, default=False, help='Pad Numbers')
+    # parser.add_argument('--round_to', type=int, default=None, help='Round To')
+    # parser.add_argument('--downsample_to', type=int, default=None, help='Downsample To')
 
-    args = parser.parse_args()
+    # args = parser.parse_args()
 
-    dataset = UCRDataSet(args.dataset, args.image_path, args.data_path)
-    dataset.round_to = args.round_to
-    dataset.downsample_to = args.downsample_to
-    dataset.padded = args.padded
+    # dataset = UCRDataSet(args.dataset, args.image_path, args.data_path)
+    # dataset.round_to = args.round_to
+    # dataset.downsample_to = args.downsample_to
+    # dataset.padded = args.padded
 
     
-    dataset.generate_data_splits(model=args.model)
+    # dataset.generate_data_splits(model=args.model)
+
+    with open('config.yaml', 'r') as file:
+        config = yaml.safe_load(file)
+
+    dataset_name = config['dataset']['name']
+    image_path = config['image_path']
+    data_path = config['data_path']
+    model = config['model']
+    padded = config['options']['padded']
+    round_to = config['options']['round_to']
+    downsample_to = config['options']['downsample_to']
+
+    dataset = UCRDataSet(dataset_name, image_path, data_path)
+    dataset.round_to = round_to
+    dataset.downsample_to = downsample_to
+    dataset.padded = padded
+
+    dataset.generate_data_splits(model=model)
 
 
 if __name__ == '__main__':
