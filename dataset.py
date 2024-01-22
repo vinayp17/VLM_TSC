@@ -70,6 +70,11 @@ class UCRDataSet():
                 json_string = json.dumps(dictionary)
                 file.write(json_string + '\n')
 
+        test_entries_for_eval = test_set.apply(lambda row: generate_data_entry('train', model, row['question'], row['target'], row['image_filename_id'], row['image_filename_path']), axis=1).tolist()
+        json_output = json.dumps(test_entries_for_eval[:10], indent=2)
+        with open(f'{self.data_path}/test.json', 'w') as file:
+            file.write(json_output)
+
 
 def main():
     # parser = argparse.ArgumentParser(description='Generate UCR Data')
