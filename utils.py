@@ -41,6 +41,32 @@ def generate_llava_eval_entry(question, target, image_filename_id, image_filenam
     }
     return entry
 
+def generate_vicuna_qa_entry(question, target, image_filename_id, image_filename_path):
+
+    entry = {
+        "id": image_filename_id,
+        "conversations": [
+            {
+                "from": "human",
+                "value": question
+            },
+            {
+                "from": "gpt",
+                "value": target
+            }
+        ]
+    }
+    return entry
+
+def generate_vicuna_eval_entry(question, target, image_filename_id, image_filename_path):
+
+    entry = {
+        "question_id": image_filename_id,
+        "text": question,
+        "output": target,
+    }
+    return entry
+
 def generate_qwen_vl_entry(question, target, image_filename_id, image_filename_path):
 
     entry = {
@@ -64,6 +90,11 @@ def generate_data_entry(split, model, question, target, image_filename_id, image
             return generate_llava_qa_entry(question, target, image_filename_id, image_filename_path)
         else:
             return generate_llava_eval_entry(question, target, image_filename_id, image_filename_path)
+    elif model == "vicuna":
+        if split == "train": 
+            return generate_vicuna_qa_entry(question, target, image_filename_id, image_filename_path)
+        else:
+            return generate_vicuna_eval_entry(question, target, image_filename_id, image_filename_path)
     else:
         return generate_qwen_vl_entry(question, target, image_filename_id, image_filename_path)
 
