@@ -95,8 +95,10 @@ def generate_data_entry(split, model, question, target, image_filename_id, image
             return generate_vicuna_qa_entry(question, target, image_filename_id, image_filename_path)
         else:
             return generate_vicuna_eval_entry(question, target, image_filename_id, image_filename_path)
-    else:
+    elif model == "qwen":
         return generate_qwen_vl_entry(question, target, image_filename_id, image_filename_path)
+    else:
+        print("MODEL NOT FOUND")
 
 def generate_graph(X, image_filename_path, style="line"):
 
