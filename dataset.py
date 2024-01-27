@@ -19,9 +19,9 @@ import pandas as pd
 import yaml
 
 
-def process_chunk(chunk_data, image_path, max_precision, padded, round_to, downsample_to):
+def process_chunk(chunk_data, image_path, max_y, max_precision, padded, round_to, downsample_to):
     data_subset, label_subset, index_subset, = chunk_data
-    return generate_data(data_subset, label_subset, index_subset, image_path, max_precision, padded, round_to, downsample_to)
+    return generate_data(data_subset, label_subset, index_subset, image_path, max_y, max_precision, padded, round_to, downsample_to)
 
 class UCRDataSet():
     def __init__(self, dataset, image_path, data_path):
@@ -34,9 +34,13 @@ class UCRDataSet():
         self.padded = False
 
         self.X, self.y, meta = load_classification(dataset, return_metadata=True)
+        self.y[self.y == '0'] = '2'
+        self.y[self.y == '-1'] = '2'
+
 
     def multiprocessing(self, X, y):
         max_precision = max(len(str(num).split('.')[1]) if '.' in str(num) else 0 for num in X.flatten().tolist())
+        max_y = max(self.y)
 
         chunk_size = len(X)//6
 
@@ -44,7 +48,7 @@ class UCRDataSet():
 
         with Pool() as pool:
             from functools import partial
-            func = partial(process_chunk, image_path=self.image_path, max_precision=max_precision, padded=self.padded, round_to=self.round_to, downsample_to=self.downsample_to)
+            func = partial(process_chunk, image_path=self.image_path, max_y=max_y, max_precision=max_precision, padded=self.padded, round_to=self.round_to, downsample_to=self.downsample_to)
             results = pool.map(func, chunks)
 
         return pd.concat(results, axis=0)

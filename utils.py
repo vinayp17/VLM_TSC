@@ -164,7 +164,7 @@ def format_numbers_combined(numbers, max_precision, padded=False, round_to=None)
 
     return formatted_numbers
 
-def generate_data(X, y, index, image_path, max_precision, padded, round_to, downsample_to):
+def generate_data(X, y, index, image_path, max_y, max_precision, padded, round_to, downsample_to):
     
     df = pd.DataFrame(columns=['question', 'target', 'image_filename_id', 'image_filename_path'])
 
@@ -176,8 +176,11 @@ def generate_data(X, y, index, image_path, max_precision, padded, round_to, down
             combined_signal_string = format_numbers_combined(downsample(X[n][0], downsample_to), max_precision, padded=padded, round_to=round_to)
         else:
             combined_signal_string = format_numbers_combined(X[n][0], max_precision, padded=padded, round_to=round_to)
-        question = f"Which class is the following signal from? \n {combined_signal_string} \n Option 1 or 2? \n Option: ".replace("\'", "")
-        target = str(y[n])
+
+
+        #options = "A" + "".join([f" or {chr(number + 64)}" for number in range(2, int(max_y)+1)]) + "?"
+        question = f"Which class is the following signal from? \n {combined_signal_string} \n Class: ".replace("\'", "")
+        target = chr(int(y[n]) + 64) #+ " " + y[n]
 
         generate_graph(X[n][0], image_filename_path)
 
