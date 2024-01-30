@@ -104,10 +104,12 @@ def generate_graph(X, image_filename_path, style="line"):
 
     plt.figure(figsize=(4,4))
 
-    if style == "line":
-      plt.plot(X)
-    elif style == "area":
-      plt.stackplot(range(0, len(X)), X)
+
+    for dimension in range(0, len(X)):
+        if style == "line":
+            plt.plot(X[dimension])
+        elif style == "area":
+            plt.stackplot(range(0, len(X)), X)
 
     plt.tick_params(axis='x', length=0)
     plt.tick_params(axis='y', length=0)
@@ -172,17 +174,22 @@ def generate_data(X, y, index, image_path, max_y, max_precision, padded, round_t
         image_filename_id = f"image_{index[n]}"
         image_filename_path = f"{image_path}/image_{index[n]}.png"
 
-        if downsample_to is not None:
-            combined_signal_string = format_numbers_combined(downsample(X[n][0], downsample_to), max_precision, padded=padded, round_to=round_to)
-        else:
-            combined_signal_string = format_numbers_combined(X[n][0], max_precision, padded=padded, round_to=round_to)
+        question = f"Which class is the following signal from?\n"
 
+        for dimension in range(0, len(X[n])):
 
-        #options = "A" + "".join([f" or {chr(number + 64)}" for number in range(2, int(max_y)+1)]) + "?"
-        question = f"Which class is the following signal from? \n {combined_signal_string} \n Class: ".replace("\'", "")
+            if downsample_to is not None:
+                combined_signal_string = format_numbers_combined(downsample(X[n][dimension], downsample_to), max_precision, padded=padded, round_to=round_to)
+            else:
+                combined_signal_string = format_numbers_combined(X[n][dimension], max_precision, padded=padded, round_to=round_to)
+
+            #options = "A" + "".join([f" or {chr(number + 64)}" for number in range(2, int(max_y)+1)]) + "?"
+            question = question + f"Dimension {dimension}: {combined_signal_string}\n"
+            
+        question = (question + "Class: ").replace("\'", "")
         target = chr(int(y[n]) + 64) #+ " " + y[n]
 
-        generate_graph(X[n][0], image_filename_path)
+        generate_graph(X[n], image_filename_path)
 
         df.loc[n] = [question, target, image_filename_id, image_filename_path]
     
