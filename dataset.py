@@ -38,13 +38,13 @@ class UCRDataSet():
         self.y[self.y == '-1'] = '2'
 
 
-    def multiprocessing(self, X, y):
+    def multiprocessing(self, X, y, split):
         max_precision = max(len(str(num).split('.')[1]) if '.' in str(num) else 0 for num in X.flatten().tolist())
         max_y = max(self.y)
 
         chunk_size = len(X)//6
 
-        chunks = [(X[i:i + chunk_size], y[i:i + chunk_size], range(i, i+chunk_size, 1)) for i in range(0, len(X), chunk_size)]
+        chunks = [(X[i:i + chunk_size], y[i:i + chunk_size], [f'{split}_{f}' for f in range(i, i+chunk_size, 1)]) for i in range(0, len(X), chunk_size)]
 
         with Pool() as pool:
             from functools import partial
@@ -58,9 +58,16 @@ class UCRDataSet():
         # std = np.std(self.X, axis=0)
         # self.X = (self.X - mean) / std
 
-        df = self.multiprocessing(self.X, self.y)
+        X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, test_size=0.2, random_state=42)
 
-        train_set, test_set = train_test_split(df, test_size=0.2, random_state=42)
+        # Apply multiprocessing to the training set
+        train_set = self.multiprocessing(X_train, y_train, split='train')
+
+        # Apply multiprocessing to the testing set
+        test_set = self.multiprocessing(X_test, y_test, split='test')
+
+        # df = self.multiprocessing(self.X, self.y)
+        # train_set, test_set = train_test_split(df, test_size=0.2, random_state=42)
 
         train_entries = train_set.apply(lambda row: generate_data_entry('train', model, row['question'], row['target'], row['image_filename_id'], row['image_filename_path']), axis=1).tolist()
         test_entries = test_set.apply(lambda row: generate_data_entry('test', model, row['question'], row['target'], row['image_filename_id'], row['image_filename_path']), axis=1).tolist()

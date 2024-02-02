@@ -41,7 +41,7 @@ def eval_model(args):
     os.makedirs(os.path.dirname(answers_file), exist_ok=True)
     ans_file = open(answers_file, "w")
 
-    class_count = max([int(i['output']) for i in questions])
+    class_count = len(set([i['output'] for i in questions]))
 
     for line in tqdm(questions):
         idx = line["question_id"]
@@ -71,12 +71,15 @@ def eval_model(args):
             logits = model(input_ids, images=image_tensor.unsqueeze(0).half().cuda()).logits
 
             probabilities = []
+            classes = []
 
             for i in range(1, class_count+1):
-                p = logits[0, -1, tokenizer.convert_tokens_to_ids(str(i))].cpu().numpy()
+                char_i = chr(i + 64)
+                classes.append(str(char_i))
+                p = logits[0, -1, tokenizer.convert_tokens_to_ids(char_i)].cpu().numpy()
                 probabilities.append(p)
 
-            answer = str(np.argmax(probabilities) + 1)
+            answer = classes[np.argmax(probabilities)]
 
         ans_id = shortuuid.uuid()
         ans_file.write(json.dumps({"question_id": idx,
