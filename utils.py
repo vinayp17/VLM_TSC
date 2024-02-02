@@ -175,7 +175,8 @@ def generate_data(X, y, index, image_path, max_y, max_precision, padded, round_t
         image_filename_path = f"{image_path}/image_{index[n]}.png"
 
         question = f"Which class is the following signal from?\n"
-
+        
+        
         for dimension in range(0, len(X[n])):
 
             if downsample_to is not None:
@@ -184,7 +185,10 @@ def generate_data(X, y, index, image_path, max_y, max_precision, padded, round_t
                 combined_signal_string = format_numbers_combined(X[n][dimension], max_precision, padded=padded, round_to=round_to)
 
             #options = "A" + "".join([f" or {chr(number + 64)}" for number in range(2, int(max_y)+1)]) + "?"
-            question = question + f"Dimension {dimension}: {combined_signal_string}\n"
+            if len(X[n]) == 1:
+                question = question + f"{combined_signal_string}\n"
+            else:
+                question = question + f"Dimension {dimension}: {combined_signal_string}\n"
             
         question = (question + "Class: ").replace("\'", "")
         target = chr(int(y[n]) + 64) #+ " " + y[n]
