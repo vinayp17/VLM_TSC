@@ -191,7 +191,7 @@ def generate_data(X, y, index, image_path, max_y, max_precision, padded, round_t
                 question = question + f"Dimension {dimension}: {combined_signal_string}\n"
             
         question = (question + "Class: ").replace("\'", "")
-        target = chr(int(y[n]) + 64) #+ " " + y[n]
+        target = str(y[n]) # chr(int(y[n]) + 64) #+ " " + y[n]
 
         generate_graph(X[n], image_filename_path)
 
