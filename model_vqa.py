@@ -74,12 +74,12 @@ def eval_model(args):
             classes = []
 
             for i in range(1, class_count+1):
-                char_i = chr(i + 64)
-                classes.append(str(char_i))
-                p = logits[0, -1, tokenizer.convert_tokens_to_ids(char_i)].cpu().numpy()
+                # char_i = chr(i + 64)
+                # classes.append(str(char_i))
+                p = logits[0, -1, tokenizer.convert_tokens_to_ids(str(i))].cpu().numpy()
                 probabilities.append(p)
 
-            answer = classes[np.argmax(probabilities)]
+            answer = str(np.argmax(probabilities) + 1)
 
         ans_id = shortuuid.uuid()
         ans_file.write(json.dumps({"question_id": idx,
