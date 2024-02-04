@@ -18,6 +18,8 @@ import pandas as pd
 
 import yaml
 
+from preprocess import load_birds
+
 
 def process_chunk(chunk_data, image_path, max_y, max_precision, padded, round_to, downsample_to):
     data_subset, label_subset, index_subset, = chunk_data
@@ -33,19 +35,26 @@ class UCRDataSet():
         self.downsample_to = None
         self.padded = False
 
-        self.X, self.y, meta = load_classification(dataset, return_metadata=True)
+        if dataset == "birds":
+            self.X, self.y = load_birds('../birds.arff')
+        else:
+            self.X, self.y, meta = load_classification(dataset, return_metadata=True)
+
+        if len(self.X.shape) == 2:
+            self.X = self.X.reshape(self.X.shape[0], 1, self.X.shape[1])
+
         self.y[self.y == '0'] = '2'
         self.y[self.y == '-1'] = '2'
 
 
     def multiprocessing(self, X, y, split):
         max_precision = max(len(str(num).split('.')[1]) if '.' in str(num) else 0 for num in X.flatten().tolist())
-        max_y = max(self.y)
+        max_y = 0 #max(self.y)
 
         chunk_size = len(X)//6
 
         chunks = [(X[i:i + chunk_size], y[i:i + chunk_size], [f'{split}_{f}' for f in range(i, i+chunk_size, 1)]) for i in range(0, len(X), chunk_size)]
-
+        
         with Pool() as pool:
             from functools import partial
             func = partial(process_chunk, image_path=self.image_path, max_y=max_y, max_precision=max_precision, padded=self.padded, round_to=self.round_to, downsample_to=self.downsample_to)
@@ -54,10 +63,6 @@ class UCRDataSet():
         return pd.concat(results, axis=0)
     
     def generate_data_splits(self, model):
-        # mean = np.mean(self.X, axis=0)
-        # std = np.std(self.X, axis=0)
-        # self.X = (self.X - mean) / std
-
         X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, test_size=0.2, random_state=42)
 
         # Apply multiprocessing to the training set
