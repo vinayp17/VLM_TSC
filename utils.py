@@ -158,7 +158,7 @@ def downsample(X, factor=2):
     # interpolated_downsampled = interp(resampled_t)
 
 
-def format_numbers_combined(numbers, max_precision, padded=False, round_to=None):
+def format_numbers_combined(numbers, round_to=None):
     if round_to:
         numbers = [np.round(i, round_to) for i in numbers]
 
@@ -166,7 +166,7 @@ def format_numbers_combined(numbers, max_precision, padded=False, round_to=None)
 
     return formatted_numbers
 
-def generate_data(X, y, index, image_path, max_y, max_precision, padded, round_to, downsample_to):
+def generate_data(X, y, index, image_path, round_to, downsample_to):
     
     df = pd.DataFrame(columns=['question', 'target', 'image_filename_id', 'image_filename_path'])
 
@@ -180,18 +180,17 @@ def generate_data(X, y, index, image_path, max_y, max_precision, padded, round_t
         for dimension in range(0, len(X[n])):
 
             if downsample_to is not None:
-                combined_signal_string = format_numbers_combined(downsample(X[n][dimension], downsample_to), max_precision, padded=padded, round_to=round_to)
+                combined_signal_string = format_numbers_combined(downsample(X[n][dimension], downsample_to), round_to=round_to)
             else:
-                combined_signal_string = format_numbers_combined(X[n][dimension], max_precision, padded=padded, round_to=round_to)
-
-            #options = "A" + "".join([f" or {chr(number + 64)}" for number in range(2, int(max_y)+1)]) + "?"
+                combined_signal_string = format_numbers_combined(X[n][dimension], round_to=round_to)
+                
             if len(X[n]) == 1:
                 question = question + f"{combined_signal_string}\n"
             else:
                 question = question + f"Dimension {dimension}: {combined_signal_string}\n"
             
         question = (question + "Class: ").replace("\'", "")
-        target = str(y[n]) # chr(int(y[n]) + 64) #+ " " + y[n]
+        target = str(y[n]) 
 
         generate_graph(X[n], image_filename_path)
 

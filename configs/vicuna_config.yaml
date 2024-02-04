@@ -1,0 +1,15 @@
+dataset:
+  name: 'TwoLeadECG'  # Replace with actual dataset name
+
+image_path: '/content/FastChat/data/images'  # Replace with actual image path
+
+data_path: '/content/FastChat/data/'  # Replace with actual data path
+
+model: 'vicuna'  # Replace with the model name
+
+options:
+  padded: False  # Set to True if padding is needed
+  round_to: 2  # Replace with an integer if rounding is needed, else keep as null
+  downsample_to: null # Replace with an integer if downsampling is needed, else keep as null
+
+

@@ -48,16 +48,13 @@ class UCRDataSet():
 
 
     def multiprocessing(self, X, y, split):
-        max_precision = max(len(str(num).split('.')[1]) if '.' in str(num) else 0 for num in X.flatten().tolist())
-        max_y = 0 #max(self.y)
-
         chunk_size = len(X)//6
 
         chunks = [(X[i:i + chunk_size], y[i:i + chunk_size], [f'{split}_{f}' for f in range(i, i+chunk_size, 1)]) for i in range(0, len(X), chunk_size)]
         
         with Pool() as pool:
             from functools import partial
-            func = partial(process_chunk, image_path=self.image_path, max_y=max_y, max_precision=max_precision, padded=self.padded, round_to=self.round_to, downsample_to=self.downsample_to)
+            func = partial(process_chunk, image_path=self.image_path, round_to=self.round_to, downsample_to=self.downsample_to)
             results = pool.map(func, chunks)
 
         return pd.concat(results, axis=0)
@@ -71,9 +68,6 @@ class UCRDataSet():
         # Apply multiprocessing to the testing set
         test_set = self.multiprocessing(X_test, y_test, split='test')
 
-        # df = self.multiprocessing(self.X, self.y)
-        # train_set, test_set = train_test_split(df, test_size=0.2, random_state=42)
-
         train_entries = train_set.apply(lambda row: generate_data_entry('train', model, row['question'], row['target'], row['image_filename_id'], row['image_filename_path']), axis=1).tolist()
         test_entries = test_set.apply(lambda row: generate_data_entry('test', model, row['question'], row['target'], row['image_filename_id'], row['image_filename_path']), axis=1).tolist()
 
@@ -86,10 +80,10 @@ class UCRDataSet():
                 json_string = json.dumps(dictionary)
                 file.write(json_string + '\n')
 
-        test_entries_for_eval = test_set.apply(lambda row: generate_data_entry('train', model, row['question'], row['target'], row['image_filename_id'], row['image_filename_path']), axis=1).tolist()
-        json_output = json.dumps(test_entries_for_eval[:10], indent=2)
-        with open(f'{self.data_path}/test.json', 'w') as file:
-            file.write(json_output)
+        # test_entries_for_eval = test_set.apply(lambda row: generate_data_entry('train', model, row['question'], row['target'], row['image_filename_id'], row['image_filename_path']), axis=1).tolist()
+        # json_output = json.dumps(test_entries_for_eval[:10], indent=2)
+        # with open(f'{self.data_path}/test.json', 'w') as file:
+        #     file.write(json_output)
 
 
 def main():

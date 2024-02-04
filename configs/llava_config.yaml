@@ -1,9 +1,9 @@
 dataset:
-  name: 'PenDigits'  # Replace with actual dataset name
+  name: 'TwoLeadECG'  # Replace with actual dataset name
 
-image_path: './images'  # Replace with actual image path
+image_path: '/content/LLaVA/playground/new_data/images'  # Replace with actual image path
 
-data_path: '.'  # Replace with actual data path
+data_path: '/content/LLaVA/playground/new_data/'  # Replace with actual data path
 
 model: 'llava'  # Replace with the model name
 

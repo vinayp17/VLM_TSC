@@ -48,10 +48,10 @@ def eval_model(args):
         image_file = line["image"]
         qs = line["text"]
         cur_prompt = qs
-        if model.config.mm_use_im_start_end:
-            qs = DEFAULT_IM_START_TOKEN + DEFAULT_IMAGE_TOKEN + DEFAULT_IM_END_TOKEN + '\n' + qs
-        else:
-            qs = DEFAULT_IMAGE_TOKEN + '\n' + qs
+        # if model.config.mm_use_im_start_end:
+        #     qs = DEFAULT_IM_START_TOKEN + DEFAULT_IMAGE_TOKEN + DEFAULT_IM_END_TOKEN + '\n' + qs
+        # else:
+        #     qs = DEFAULT_IMAGE_TOKEN + '\n' + qs
 
         conv = conv_templates[args.conv_mode].copy()
         conv.append_message(conv.roles[0], qs)
@@ -71,11 +71,8 @@ def eval_model(args):
             logits = model(input_ids, images=image_tensor.unsqueeze(0).half().cuda()).logits
 
             probabilities = []
-            classes = []
 
             for i in range(1, class_count+1):
-                # char_i = chr(i + 64)
-                # classes.append(str(char_i))
                 p = logits[0, -1, tokenizer.convert_tokens_to_ids(str(i))].cpu().numpy()
                 probabilities.append(p)
 
