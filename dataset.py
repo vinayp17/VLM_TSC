@@ -19,11 +19,12 @@ import pandas as pd
 import yaml
 
 from preprocess import load_birds
+import sys
 
 
-def process_chunk(chunk_data, image_path, max_y, max_precision, padded, round_to, downsample_to):
+def process_chunk(chunk_data, image_path,  round_to, downsample_to):
     data_subset, label_subset, index_subset, = chunk_data
-    return generate_data(data_subset, label_subset, index_subset, image_path, max_y, max_precision, padded, round_to, downsample_to)
+    return generate_data(data_subset, label_subset, index_subset, image_path, round_to, downsample_to)
 
 class UCRDataSet():
     def __init__(self, dataset, image_path, data_path):
@@ -106,7 +107,7 @@ def main():
     
     # dataset.generate_data_splits(model=args.model)
 
-    with open('config.yaml', 'r') as file:
+    with open(sys.argv[1], 'r') as file:
         config = yaml.safe_load(file)
 
     dataset_name = config['dataset']['name']
