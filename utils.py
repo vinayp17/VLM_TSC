@@ -86,16 +86,16 @@ def generate_qwen_vl_entry(question, target, image_filename_id, image_filename_p
 
 def generate_data_entry(split, model, question, target, image_filename_id, image_filename_path):
     if model == "llava":
-        if split == "train": 
+        if split == "train" or split == "validation":
             return generate_llava_qa_entry(question, target, image_filename_id, image_filename_path)
         else:
             return generate_llava_eval_entry(question, target, image_filename_id, image_filename_path)
     elif model == "vicuna":
-        if split == "train": 
+        if split == "train" or split == "validation":
             return generate_vicuna_qa_entry(question, target, image_filename_id, image_filename_path)
         else:
             return generate_vicuna_eval_entry(question, target, image_filename_id, image_filename_path)
-    elif model == "qwen":
+    elif model == "qwen" or split == "validation":
         return generate_qwen_vl_entry(question, target, image_filename_id, image_filename_path)
     else:
         print("MODEL NOT FOUND")
@@ -167,7 +167,7 @@ def format_numbers_combined(numbers, round_to=None):
     return formatted_numbers
 
 def generate_data(X, y, index, image_path, round_to, downsample_to):
-    
+
     df = pd.DataFrame(columns=['question', 'target', 'image_filename_id', 'image_filename_path'])
 
     for n in range(0, len(y)):
@@ -175,27 +175,27 @@ def generate_data(X, y, index, image_path, round_to, downsample_to):
         image_filename_path = f"{image_path}/image_{index[n]}.png"
 
         question = f"Which class is the following signal from?\n"
-        
-        
+
+
         for dimension in range(0, len(X[n])):
 
             if downsample_to is not None:
                 combined_signal_string = format_numbers_combined(downsample(X[n][dimension], downsample_to), round_to=round_to)
             else:
                 combined_signal_string = format_numbers_combined(X[n][dimension], round_to=round_to)
-                
+
             if len(X[n]) == 1:
                 question = question + f"{combined_signal_string}\n"
             else:
                 question = question + f"Dimension {dimension}: {combined_signal_string}\n"
-            
+
         question = (question + "Class: ").replace("\'", "")
-        target = str(y[n]) 
+        target = str(y[n])
 
         generate_graph(X[n], image_filename_path)
 
         df.loc[n] = [question, target, image_filename_id, image_filename_path]
-    
+
 
     return df
 

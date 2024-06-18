@@ -52,40 +52,43 @@ class UCRDataSet():
         chunk_size = len(X)//6
 
         chunks = [(X[i:i + chunk_size], y[i:i + chunk_size], [f'{split}_{f}' for f in range(i, i+chunk_size, 1)]) for i in range(0, len(X), chunk_size)]
-        
+
         with Pool() as pool:
             from functools import partial
             func = partial(process_chunk, image_path=self.image_path, round_to=self.round_to, downsample_to=self.downsample_to)
             results = pool.map(func, chunks)
 
         return pd.concat(results, axis=0)
-    
+
     def generate_data_splits(self, model):
         X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, test_size=0.2, random_state=42)
+        X_train, X_validation, y_train, y_validation = train_test_split(X_train, y_train, test_size=0.25, random_state=21)
 
         # Apply multiprocessing to the training set
         train_set = self.multiprocessing(X_train, y_train, split='train')
+
+        # Apply multiprocess to the validation set
+        validation_set = self.multiprocessing(X_validation, y_validation, split='validation')
 
         # Apply multiprocessing to the testing set
         test_set = self.multiprocessing(X_test, y_test, split='test')
 
         train_entries = train_set.apply(lambda row: generate_data_entry('train', model, row['question'], row['target'], row['image_filename_id'], row['image_filename_path']), axis=1).tolist()
+        validation_entries = validation_set.apply(lambda row: generate_data_entry('validation', model, row['question'], row['target'], row['image_filename_id'], row['image_filename_path']), axis=1).tolist()
         test_entries = test_set.apply(lambda row: generate_data_entry('test', model, row['question'], row['target'], row['image_filename_id'], row['image_filename_path']), axis=1).tolist()
 
         json_output = json.dumps(train_entries, indent=2)
         with open(f'{self.data_path}/train.json', 'w') as file:
             file.write(json_output)
 
-        with open(f'{self.data_path}/test.jsonl', 'w') as file:
+        json_output = json.dumps(validation_entries, indent=2)
+        with open(f'{self.data_path}/validation.json', 'w') as file:
+            file.write(json_output)
+
+        with open(f'{self.data_path}/test.json', 'w') as file:
             for dictionary in test_entries:
                 json_string = json.dumps(dictionary)
                 file.write(json_string + '\n')
-
-        # test_entries_for_eval = test_set.apply(lambda row: generate_data_entry('train', model, row['question'], row['target'], row['image_filename_id'], row['image_filename_path']), axis=1).tolist()
-        # json_output = json.dumps(test_entries_for_eval[:10], indent=2)
-        # with open(f'{self.data_path}/test.json', 'w') as file:
-        #     file.write(json_output)
-
 
 def main():
     # parser = argparse.ArgumentParser(description='Generate UCR Data')
@@ -104,7 +107,7 @@ def main():
     # dataset.downsample_to = args.downsample_to
     # dataset.padded = args.padded
 
-    
+
     # dataset.generate_data_splits(model=args.model)
 
     with open(sys.argv[1], 'r') as file:
