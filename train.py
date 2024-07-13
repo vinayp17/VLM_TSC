@@ -70,7 +70,8 @@ def finetune( *, downsample, round_to, dataset, vlm_root, llava_root, num_epochs
         validation_file = f'{llava_dataset_dir}/validation.json'
     )
     print(llava_finetune_cmd)
-
+    cp = subprocess.run(llava_finetune_cmd.split(), capture_output=False)
+    cp.check_returncode()
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
