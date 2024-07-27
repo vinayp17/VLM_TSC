@@ -22,9 +22,9 @@ from preprocess import load_birds
 import sys
 
 
-def process_chunk(chunk_data, image_path,  round_to, downsample_to):
+def process_chunk(chunk_data, image_path,  round_to, downsample_to, split, dataset):
     data_subset, label_subset, index_subset, = chunk_data
-    return generate_data(data_subset, label_subset, index_subset, image_path, round_to, downsample_to)
+    return generate_data(dataset, data_subset, label_subset, index_subset, image_path, round_to, downsample_to, split)
 
 class UCRDataSet():
     def __init__(self, dataset, image_path, data_path):
@@ -48,14 +48,14 @@ class UCRDataSet():
         self.y[self.y == '-1'] = '2'
 
 
-    def multiprocessing(self, X, y, split):
+    def multiprocessing(self,X, y, split):
         chunk_size = len(X)//6
 
         chunks = [(X[i:i + chunk_size], y[i:i + chunk_size], [f'{split}_{f}' for f in range(i, i+chunk_size, 1)]) for i in range(0, len(X), chunk_size)]
 
         with Pool() as pool:
             from functools import partial
-            func = partial(process_chunk, image_path=self.image_path, round_to=self.round_to, downsample_to=self.downsample_to)
+            func = partial(process_chunk, image_path=self.image_path, round_to=self.round_to, downsample_to=self.downsample_to, split=split, dataset=self.dataset)
             results = pool.map(func, chunks)
 
         return pd.concat(results, axis=0)

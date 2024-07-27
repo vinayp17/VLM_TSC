@@ -12,6 +12,7 @@ from scipy.ndimage import uniform_filter1d
 from scipy.interpolate import interp1d
 
 import pandas as pd
+from rationales import query_openai
 
 def generate_llava_qa_entry(question, target, image_filename_id, image_filename_path):
 
@@ -166,7 +167,7 @@ def format_numbers_combined(numbers, round_to=None):
 
     return formatted_numbers
 
-def generate_data(X, y, index, image_path, round_to, downsample_to):
+def generate_data(dataset, X, y, index, image_path, round_to, downsample_to, split):
 
     df = pd.DataFrame(columns=['question', 'target', 'image_filename_id', 'image_filename_path'])
 
@@ -189,8 +190,16 @@ def generate_data(X, y, index, image_path, round_to, downsample_to):
             else:
                 question = question + f"Dimension {dimension}: {combined_signal_string}\n"
 
-        question = (question + "Class: ").replace("\'", "")
+
         target = str(y[n])
+        answer = f"Class: {target}"
+
+        if split=="train":
+            #Add rationales here
+            rationale=query_openai(dataset, combined_signal_string, answer)
+            question = question + f"Rationale:{rationale}\n"
+
+        question = (question + "Class: ").replace("\'", "")
 
         generate_graph(X[n], image_filename_path)
 
