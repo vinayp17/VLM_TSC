@@ -12,7 +12,7 @@ from scipy.ndimage import uniform_filter1d
 from scipy.interpolate import interp1d
 
 import pandas as pd
-from rationales import query_openai
+from data_templates import generate_conversation, DataRepresentation
 
 def generate_llava_qa_entry(question, target, image_filename_id, image_filename_path):
 
@@ -167,6 +167,20 @@ def format_numbers_combined(numbers, round_to=None):
 
     return formatted_numbers
 
+def generate_timeseries_signal_str( num_dimensions, X, downsample_to ):
+    timeseries_signal_str = ""
+
+    for dimension in range(0, num_dimensions):
+        if downsample_to is not None:
+            combined_signal_string = format_numbers_combined(downsample(X[n][dimension], downsample_to), round_to=round_to)
+        else:
+            combined_signal_string = format_numbers_combined(X[n][dimension], round_to=round_to)
+
+        if num_dimensions > 1:
+            timeseries_signal_str += f"Dimension {dimension}: "
+        timeseries_signal_str += f"{combined_signal_string}\n"
+
+
 def generate_data(dataset, X, y, index, image_path, round_to, downsample_to, split):
 
     df = pd.DataFrame(columns=['question', 'target', 'image_filename_id', 'image_filename_path'])
@@ -175,36 +189,18 @@ def generate_data(dataset, X, y, index, image_path, round_to, downsample_to, spl
         image_filename_id = f"image_{index[n]}"
         image_filename_path = f"{image_path}/image_{index[n]}.png"
 
-        question = f"Which class is the following signal from?\n"
-
-
-        for dimension in range(0, len(X[n])):
-
-            if downsample_to is not None:
-                combined_signal_string = format_numbers_combined(downsample(X[n][dimension], downsample_to), round_to=round_to)
-            else:
-                combined_signal_string = format_numbers_combined(X[n][dimension], round_to=round_to)
-
-            if len(X[n]) == 1:
-                question = question + f"{combined_signal_string}\n"
-            else:
-                question = question + f"Dimension {dimension}: {combined_signal_string}\n"
-
+        num_dimensions = len(X[n])
+        timeseries_signal_str = generate_timeseries_signal_str( num_dimensions, X[n], downsample_to )
 
         target = str(y[n])
         answer = f"Class: {target}"
 
-        if split=="train":
-            #Add rationales here
-            rationale=query_openai(dataset, combined_signal_string, answer)
-            question = question + f"Rationale:{rationale}\n"
-
-        question = (question + "Class: ").replace("\'", "")
+        question = generate_conversation(timeseries_signal_str, answer, dataset, split, DataRepresentation.BASELINE, num_dimensions)
+        question = (question).replace("\'", "")
 
         generate_graph(X[n], image_filename_path)
 
         df.loc[n] = [question, target, image_filename_id, image_filename_path]
-
 
     return df
 
