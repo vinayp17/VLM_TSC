@@ -30,13 +30,13 @@ deepspeed {llava_root}/llava/train/train_mem.py \
 --per_device_train_batch_size 4 \
 --per_device_eval_batch_size 1 \
 --gradient_accumulation_steps 4 \
---evaluation_strategy "no" \
---save_strategy "epoch" \
+--evaluation_strategy no \
+--save_strategy epoch \
 --save_total_limit 1 \
 --learning_rate 2e-4 \
 --weight_decay 0. \
 --warmup_ratio 0.03 \
---lr_scheduler_type "cosine" \
+--lr_scheduler_type cosine \
 --logging_steps 1 \
 --tf32 True \
 --model_max_length {context_length} \
@@ -45,6 +45,6 @@ deepspeed {llava_root}/llava/train/train_mem.py \
 --lazy_preprocess True \
 --report_to tensorboard \
 --validation_data_path {validation_file} \
---evaluation_strategy "steps" \
+--evaluation_strategy steps \
 --report_to wandb"""
     return llava_cmd
