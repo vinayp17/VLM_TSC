@@ -167,21 +167,22 @@ def format_numbers_combined(numbers, round_to=None):
 
     return formatted_numbers
 
-def generate_timeseries_signal_str( num_dimensions, X, downsample_to ):
+def generate_timeseries_signal_str( num_dimensions, X, downsample_to, round_to ):
     timeseries_signal_str = ""
 
     for dimension in range(0, num_dimensions):
         if downsample_to is not None:
-            combined_signal_string = format_numbers_combined(downsample(X[n][dimension], downsample_to), round_to=round_to)
+            combined_signal_string = format_numbers_combined(downsample(X[dimension], downsample_to), round_to=round_to)
         else:
-            combined_signal_string = format_numbers_combined(X[n][dimension], round_to=round_to)
+            combined_signal_string = format_numbers_combined(X[dimension], round_to=round_to)
 
         if num_dimensions > 1:
             timeseries_signal_str += f"Dimension {dimension}: "
         timeseries_signal_str += f"{combined_signal_string}\n"
+    return timeseries_signal_str
 
 
-def generate_data(dataset, X, y, index, image_path, round_to, downsample_to, split):
+def generate_data(dataset, X, y, index, image_path, round_to, downsample_to, data_repr, split):
 
     df = pd.DataFrame(columns=['question', 'target', 'image_filename_id', 'image_filename_path'])
 
@@ -190,12 +191,13 @@ def generate_data(dataset, X, y, index, image_path, round_to, downsample_to, spl
         image_filename_path = f"{image_path}/image_{index[n]}.png"
 
         num_dimensions = len(X[n])
-        timeseries_signal_str = generate_timeseries_signal_str( num_dimensions, X[n], downsample_to )
+
+        timeseries_signal_str = generate_timeseries_signal_str( num_dimensions, X[n], downsample_to, round_to )
 
         target = str(y[n])
         answer = f"Class: {target}"
 
-        question = generate_conversation(timeseries_signal_str, answer, dataset, split, DataRepresentation.BASELINE, num_dimensions)
+        question = generate_conversation(timeseries_signal_str, answer, dataset, split, data_repr, num_dimensions)
         question = (question).replace("\'", "")
 
         generate_graph(X[n], image_filename_path)
