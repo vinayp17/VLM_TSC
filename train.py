@@ -21,7 +21,7 @@ Different experiments to run
 
 SUPPORTED_DATASETS = ["TwoLeadECG", "CinCECGTorso", "ItalyPowerDemand", "FreezerSmallTrain", "PenDigits", "PhalangesOutlinesCorrect", "HandOutlines" ]
 
-def finetune( *, downsample, round_to, dataset, vlm_root, llava_root, num_epochs, context_length):
+def finetune( *, downsample, round_to, dataset, vlm_root, llava_root, num_epochs, context_length, data_repr):
 
     ####### Generate configs #########################
     config_template = os.path.join(vlm_root, "configs/llava_config.yaml")
@@ -43,6 +43,8 @@ def finetune( *, downsample, round_to, dataset, vlm_root, llava_root, num_epochs
     config["image_path"] = f"{llava_image_dir}"
     config["options"]["round_to"] = round_to
     config["options"]["downsample_to"] = downsample if downsample > 0 else None
+    config["options"]["context_length"] = context_length
+    config["options"]["data_repr"] = data_repr
 
     config_filename = f"{vlm_root}/configs/llava_config_{dataset}_downsample_{downsample}_round_{round_to}.yaml"
     with open(config_filename, "w") as f:
@@ -82,6 +84,7 @@ if __name__ == "__main__":
     argparser.add_argument("--llava-root",type=str,required=True, help="Root Dir for LLaVA git repo")
     argparser.add_argument("--num-epochs", type=int, default=2)
     argparser.add_argument("--context-length", type=int, default=2048)
+    argparser.add_argument("--data-repr", type=str, choices=["BASELINE", "WITH_RATIONALE", "WITH_SIGNAL_ANALYSIS"], required=True)
     args = argparser.parse_args()
     finetune( downsample=args.downsample,
               round_to=args.round_to,
@@ -89,5 +92,6 @@ if __name__ == "__main__":
               vlm_root=args.vlm_root,
               llava_root=args.llava_root,
               num_epochs = args.num_epochs,
-              context_length = args.context_length
+              context_length = args.context_length,
+              data_repr = args.data_repr
             )
