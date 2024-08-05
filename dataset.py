@@ -12,6 +12,8 @@ from scipy.ndimage import uniform_filter1d
 from scipy.interpolate import interp1d
 
 from utils import format_numbers_combined, downsample, generate_graph, generate_data, generate_data_entry
+from parameter_finder import compute_downsample_setting
+from data_templates import DataRepresentation
 from multiprocessing import Pool
 
 import pandas as pd
@@ -22,15 +24,17 @@ from preprocess import load_birds
 import sys
 
 
-def process_chunk(chunk_data, image_path,  round_to, downsample_to, split, dataset):
+def process_chunk(chunk_data, image_path,  round_to, downsample_to, data_repr, split, dataset):
     data_subset, label_subset, index_subset, = chunk_data
-    return generate_data(dataset, data_subset, label_subset, index_subset, image_path, round_to, downsample_to, split)
+    return generate_data(dataset, data_subset, label_subset, index_subset, image_path, round_to, downsample_to, data_repr, split)
 
 class UCRDataSet():
-    def __init__(self, dataset, image_path, data_path):
+    def __init__(self, dataset, image_path, data_path, context_length, data_repr):
         self.dataset = dataset
         self.image_path = image_path
         self.data_path  = data_path
+        self.context_length = context_length
+        self.data_repr = data_repr
 
         self.round_to = None
         self.downsample_to = None
@@ -55,7 +59,7 @@ class UCRDataSet():
 
         with Pool() as pool:
             from functools import partial
-            func = partial(process_chunk, image_path=self.image_path, round_to=self.round_to, downsample_to=self.downsample_to, split=split, dataset=self.dataset)
+            func = partial(process_chunk, image_path=self.image_path, round_to=self.round_to, downsample_to=self.downsample_to, data_repr=self.data_repr,split=split, dataset=self.dataset)
             results = pool.map(func, chunks)
 
         return pd.concat(results, axis=0)
@@ -63,6 +67,14 @@ class UCRDataSet():
     def generate_data_splits(self, model):
         X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, test_size=0.2, random_state=42)
         X_train, X_validation, y_train, y_validation = train_test_split(X_train, y_train, test_size=0.25, random_state=21)
+
+        self.downsample_to = compute_downsample_setting(X_train[0], 'liuhaotian/llava-v1.5-7b', self.context_length, self.round_to, 300 if self.data_repr != DataRepresentation.BASELINE else 0, self.data_repr)
+
+        #For a given training sample
+        #Check which mode are we in : BaseLine, Rationale, Signal
+        #Check what is the maximum token length for the original timeseries in the given mode
+        #Based on the above, come up with an appropriate downsampling parameter to use
+        #While downsampling, downsample both image and text
 
         # Apply multiprocessing to the training set
         train_set = self.multiprocessing(X_train, y_train, split='train')
@@ -91,25 +103,6 @@ class UCRDataSet():
                 file.write(json_string + '\n')
 
 def main():
-    # parser = argparse.ArgumentParser(description='Generate UCR Data')
-    # parser.add_argument('dataset', type=str, help='Name of the dataset')
-    # parser.add_argument('image_path', type=str, help='Path to save images')
-    # parser.add_argument('data_path', type=str, help='Path to save data')
-    # parser.add_argument('model', type=str, help='Model to use')
-    # parser.add_argument('--padded', type=bool, default=False, help='Pad Numbers')
-    # parser.add_argument('--round_to', type=int, default=None, help='Round To')
-    # parser.add_argument('--downsample_to', type=int, default=None, help='Downsample To')
-
-    # args = parser.parse_args()
-
-    # dataset = UCRDataSet(args.dataset, args.image_path, args.data_path)
-    # dataset.round_to = args.round_to
-    # dataset.downsample_to = args.downsample_to
-    # dataset.padded = args.padded
-
-
-    # dataset.generate_data_splits(model=args.model)
-
     with open(sys.argv[1], 'r') as file:
         config = yaml.safe_load(file)
 
@@ -120,8 +113,18 @@ def main():
     padded = config['options']['padded']
     round_to = config['options']['round_to']
     downsample_to = config['options']['downsample_to']
+    context_length = config['options']['context_length']
+    data_repr = config['options']['data_repr']
+    if data_repr == "BASELINE":
+        data_repr = DataRepresentation.BASELINE
+    elif data_repr == "WITH_RATIONALE":
+        data_repr = DataRepresentation.WITH_RATIONALE
+    elif data_repr == "WITH_SIGNAL_ANALYSIS":
+        data_repr = DataRepresentation.WITH_SIGNAL_ANALYSIS
 
-    dataset = UCRDataSet(dataset_name, image_path, data_path)
+    print( data_repr )
+
+    dataset = UCRDataSet(dataset_name, image_path, data_path, context_length, data_repr)
     dataset.round_to = round_to
     dataset.downsample_to = downsample_to
     dataset.padded = padded
