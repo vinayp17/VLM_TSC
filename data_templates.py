@@ -4,6 +4,7 @@ Generate different dataformats to feed into LLM
 
 from enum import Enum
 from dataclasses import dataclass
+from generate_description import generate_rationale, generate_signal_analysis
 
 
 # Define an enum for data representation choices
