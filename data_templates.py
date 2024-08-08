@@ -4,7 +4,7 @@ Generate different dataformats to feed into LLM
 
 from enum import Enum
 from dataclasses import dataclass
-from generate_description import generate_rationale, generate_signal_analysis
+from generate_description import generate_rationale, generate_signal_analysis, generate_stats
 
 
 # Define an enum for data representation choices
@@ -12,9 +12,10 @@ class DataRepresentation(Enum):
     BASELINE = 1
     WITH_RATIONALE = 2
     WITH_SIGNAL_ANALYSIS = 3
+    WITH_STATS = 4
 
 
-def generate_conversation(timeseries_data, answer, dataset, split, data_repr_choice, num_dimensions):
+def generate_conversation(timeseries_data, answer, dataset, split, data_repr_choice, num_dimensions, raw_data):
 
     univariate_baseline = f"Which class is the following signal from?\n{timeseries_data}\nClass: "
     multivariate_baseline = f"Given the following multi-dimensional timeseries\n{timeseries_data}\nWhich class is the above signal from\nClass: "
@@ -22,7 +23,7 @@ def generate_conversation(timeseries_data, answer, dataset, split, data_repr_cho
     if num_dimensions > 1:
         multivariate_preface = "Multi-variate"
 
-    if split == "train" or split == "validation":
+    if split == "train" or split == "validation" or split == "test" :
         if data_repr_choice == DataRepresentation.WITH_RATIONALE:
             #generate rationale
             rationale = generate_rationale(dataset, timeseries_data, answer)
@@ -35,6 +36,10 @@ def generate_conversation(timeseries_data, answer, dataset, split, data_repr_cho
             with_signal_analysis = f"""{multivariate_preface} TimeSeries data:{timeseries_data}\nSignal Analysis\
                                     :{signal_analysis}\nQuestion:Which class is the above signal from? Class:"""
             return with_signal_analysis
+        elif data_repr_choice == DataRepresentation.WITH_STATS:
+            stats = generate_stats(raw_data, num_dimensions)
+            with_stats = f"""{multivariate_preface} TimeSeries data:{timeseries_data}\nStats:{stats}\nQuestion:Which class is the above signal from? Class:"""
+            return with_stats
     if num_dimensions > 1:
         return multivariate_baseline
     else:
