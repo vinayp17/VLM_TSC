@@ -15,12 +15,12 @@ class TimeSeriesStats:
     rounding: int = 2
 
     def __post_init__(self):
-        self.mean = round(np.mean(self.data), self.rounding)
-        self.std_deviation = round(np.std(self.data), self.rounding)
-        self.variance = round(np.var(self.data), self.rounding)
-        self.skewness = round(skew(self.data), self.rounding)
-        self.kurtosis = round(kurtosis(self.data), self.rounding )
-        self.autocorrelation = round(pd.Series(self.data).autocorr(), self.rounding)
+        self.mean = np.round(np.mean(self.data), self.rounding)
+        self.std_deviation = np.round(np.std(self.data), self.rounding)
+        self.variance = np.round(np.var(self.data), self.rounding)
+        self.skewness = np.round(skew(self.data), self.rounding)
+        self.kurtosis = np.round(kurtosis(self.data), self.rounding )
+        self.autocorrelation = np.round(pd.Series(self.data).autocorr(), self.rounding)
 
 if __name__ == "__main__":
     # Provided time series data
