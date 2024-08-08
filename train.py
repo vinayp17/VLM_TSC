@@ -84,7 +84,7 @@ if __name__ == "__main__":
     argparser.add_argument("--llava-root",type=str,required=True, help="Root Dir for LLaVA git repo")
     argparser.add_argument("--num-epochs", type=int, default=2)
     argparser.add_argument("--context-length", type=int, default=2048)
-    argparser.add_argument("--data-repr", type=str, choices=["BASELINE", "WITH_RATIONALE", "WITH_SIGNAL_ANALYSIS"], required=True)
+    argparser.add_argument("--data-repr", type=str, choices=["BASELINE", "WITH_RATIONALE", "WITH_SIGNAL_ANALYSIS", "WITH_STATS"], required=True)
     args = argparser.parse_args()
     finetune( downsample=args.downsample,
               round_to=args.round_to,
