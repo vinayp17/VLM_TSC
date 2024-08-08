@@ -197,7 +197,7 @@ def generate_data(dataset, X, y, index, image_path, round_to, downsample_to, dat
         target = str(y[n])
         answer = f"Class: {target}"
 
-        question = generate_conversation(timeseries_signal_str, answer, dataset, split, data_repr, num_dimensions)
+        question = generate_conversation(timeseries_signal_str, answer, dataset, split, data_repr, num_dimensions, X[n])
         question = (question).replace("\'", "")
 
         generate_graph(X[n], image_filename_path)
