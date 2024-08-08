@@ -121,6 +121,8 @@ def main():
         data_repr = DataRepresentation.WITH_RATIONALE
     elif data_repr == "WITH_SIGNAL_ANALYSIS":
         data_repr = DataRepresentation.WITH_SIGNAL_ANALYSIS
+    elif data_repr == "WITH_STATS":
+        data_repr = DataRepresentation.WITH_STATS
 
     print( data_repr )
 
