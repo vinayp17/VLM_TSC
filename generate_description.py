@@ -64,10 +64,9 @@ The ouput should be in a single paragraph"""
     rationale = query_openai( rationale_prompt )
     return rationale
 
-def generate_stats( signal_representation ):
-    signal_list = signal_representation.split(',')
-    signal_numerical = [float(x) for x in signal_list]
-    ts_stats = TimeSeriesStats(data=np.array(signal_numerical))
+def generate_stats( raw_data, num_dimensions ):
+    #TODO : compute stats prompt for multi-dimensional
+    ts_stats = TimeSeriesStats(data=np.array(raw_data[0]))
     stats_prompt = f"mean:{ts_stats.mean} std_deviation:{ts_stats.std_deviation} variance:{ts_stats.variance} skewness:{ts_stats.skewness} kurtosis:{ts_stats.kurtosis} autocorrelation:{ts_stats.autocorrelation}"
     return stats_prompt
 
