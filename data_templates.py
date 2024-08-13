@@ -5,6 +5,7 @@ Generate different dataformats to feed into LLM
 from enum import Enum
 from dataclasses import dataclass
 from generate_description import generate_rationale, generate_signal_analysis, generate_stats
+from cincecg_torso_features import extract_features
 
 
 # Define an enum for data representation choices
@@ -37,8 +38,10 @@ def generate_conversation(timeseries_data, answer, dataset, split, data_repr_cho
                                     :{signal_analysis}\nQuestion:Which class is the above signal from? Class:"""
             return with_signal_analysis
         elif data_repr_choice == DataRepresentation.WITH_STATS:
-            stats = generate_stats(raw_data, num_dimensions)
-            with_stats = f"""{multivariate_preface} TimeSeries data:{timeseries_data}\nStats:{stats}\nQuestion:Which class is the above signal from? Class:"""
+            #stats = generate_stats(raw_data, num_dimensions)
+            feature_str = extract_features(raw_data[0])
+            #with_stats = f"""{multivariate_preface} TimeSeries data:{timeseries_data}\nStats:{stats}\nQuestion:Which class is the above signal from? Class:"""
+            with_stats = f"{feature_str}\nQuestion:Which class is the above signal from? Class:"
             return with_stats
     if num_dimensions > 1:
         return multivariate_baseline
