@@ -7,6 +7,8 @@ cd /code/LLaVA
 
 pip install --upgrade pip
 
+pip install PyWavelets
+
 # !pip install deepspeed
 # !pip install flash-attn
 pip install -e .
