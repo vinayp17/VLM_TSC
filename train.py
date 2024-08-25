@@ -87,5 +87,5 @@ if __name__ == "__main__":
               num_epochs = args.num_epochs,
               context_length = args.context_length,
               data_repr = args.data_repr,
-              scenario = scenario
+              exp_scenario = args.scenario
             )
