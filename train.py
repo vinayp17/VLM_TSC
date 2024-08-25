@@ -45,7 +45,7 @@ def finetune( *, round_to, dataset, vlm_root, llava_root, num_epochs, context_le
     train_file = f"{llava_dataset_dir}/train.json"
     if not os.path.exists(train_file):
         data_generation_cmd = f"python {dataset_file} {config_filename}"
-        cp = subprocess.run(data_generation_cmd.split(), capture_output=True)
+        cp = subprocess.run(data_generation_cmd.split())
         cp.check_returncode()
     #After this step train_file should exist
     assert(os.path.exists(train_file))
@@ -66,7 +66,7 @@ def finetune( *, round_to, dataset, vlm_root, llava_root, num_epochs, context_le
 
     #Calculate performance
     eval_performance(vlm_root, llava_root, scenario)
-    one_shot(f"{llava_root}/playground/new_data/{scenario}/answer.json")
+    one_shot(dataset, f"{llava_root}/playground/new_data/{scenario}/answer.json")
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
