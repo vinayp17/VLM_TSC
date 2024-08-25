@@ -9,20 +9,8 @@ import sys
 from llava_cmd_generator import generate_llava_finetune_command
 from eval_model import eval_performance, one_shot
 
-'''
-Different experiments to run
 
-1. Halve all downsamples, and double all context lengths for relevant datasets
-2. Halve all downsamples, double context lengths, but also downsample the image resolution itself
-3. Change dataset.py to beef up the conversations
-4. Change dataset.py to generate differnt kinds of images
-5. Fix the multivaraite TSC datasets to use here
-
-'''
-
-SUPPORTED_DATASETS = ["TwoLeadECG", "CinCECGTorso", "ItalyPowerDemand", "FreezerSmallTrain", "PenDigits", "PhalangesOutlinesCorrect", "HandOutlines" ]
-
-def finetune( *, downsample, round_to, dataset, vlm_root, llava_root, num_epochs, context_length, data_repr):
+def finetune( *, round_to, dataset, vlm_root, llava_root, num_epochs, context_length, data_repr, exp_scenario):
 
     ####### Generate configs #########################
     config_template = os.path.join(vlm_root, "configs/llava_config.yaml")
@@ -34,7 +22,7 @@ def finetune( *, downsample, round_to, dataset, vlm_root, llava_root, num_epochs
 
     llava_data_dir = f"{llava_root}/playground/new_data/"
     os.system(f"mkdir -p {llava_data_dir}")
-    scenario = f"{dataset}_downsample_{downsample}_round_{round_to}"
+    scenario = f"{dataset}_{exp_scenario}"
     llava_dataset_dir = f"{llava_data_dir}/{scenario}"
     os.system(f"mkdir -p {llava_dataset_dir}")
     config["data_path"] = llava_dataset_dir
@@ -43,7 +31,7 @@ def finetune( *, downsample, round_to, dataset, vlm_root, llava_root, num_epochs
     os.system(f"mkdir -p {llava_image_dir}")
     config["image_path"] = f"{llava_image_dir}"
     config["options"]["round_to"] = round_to
-    config["options"]["downsample_to"] = downsample if downsample > 0 else None
+    config["options"]["downsample_to"] = None
     config["options"]["context_length"] = context_length
     config["options"]["data_repr"] = data_repr
 
@@ -82,21 +70,22 @@ def finetune( *, downsample, round_to, dataset, vlm_root, llava_root, num_epochs
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
-    argparser.add_argument("--downsample", type=int, required=True)
     argparser.add_argument("--round_to", type=int, default=True)
-    argparser.add_argument("--dataset", type=str, required=True, choices=SUPPORTED_DATASETS)
+    argparser.add_argument("--dataset", type=str, required=True)
     argparser.add_argument("--vlm-root", type=str, required=True, help="Root Dir for VLM-TSC git repo")
     argparser.add_argument("--llava-root",type=str,required=True, help="Root Dir for LLaVA git repo")
     argparser.add_argument("--num-epochs", type=int, default=2)
     argparser.add_argument("--context-length", type=int, default=2048)
     argparser.add_argument("--data-repr", type=str, choices=["BASELINE", "WITH_RATIONALE", "WITH_SIGNAL_ANALYSIS", "WITH_STATS"], required=True)
+    argparser.add_argument("--scenario", type=str, required=True, help="Experiment scenario to run for")
     args = argparser.parse_args()
-    finetune( downsample=args.downsample,
+    finetune(
               round_to=args.round_to,
               dataset=args.dataset,
               vlm_root=args.vlm_root,
               llava_root=args.llava_root,
               num_epochs = args.num_epochs,
               context_length = args.context_length,
-              data_repr = args.data_repr
+              data_repr = args.data_repr,
+              scenario = scenario
             )
