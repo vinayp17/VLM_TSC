@@ -3,10 +3,34 @@ Module that analyzes a bunch of text,
 and returns the right downsampling parameter to use
 """
 
-from utils import format_numbers_combined
+import re
+from utils import format_numbers_combined, generate_question
 from data_templates import DataRepresentation
 from analyze_tokens import analyze_token_length
 from aeon.datasets import load_classification
+
+def compute_downsample_setting_new( raw_data, target, round_to, dataset, split, data_repr, model_name, context_length ):
+    downsample = None
+    question = generate_question( raw_data, target, None, round_to, dataset, split, data_repr )
+    full_token_length, _ = analyze_token_length(question, model_name)
+    pattern = r'\[\s*([^\]]+)\s*\]'
+    match = re.search(pattern, question)
+    if match:
+        # Extract the content within the brackets
+        timeseries_signal =  match.group(0)
+    else:
+        raise IndexError( "Unable to find timeseries portion of the string" )
+    timeseries_token_length, _ = analyze_token_length( timeseries_signal, model_name )
+    extra_token_length = full_token_length - timeseries_token_length
+    #Add some epsilion num_tokens
+    extra_token_length += 5
+    if full_token_length < context_length:
+        pass
+    else:
+        downsample = round( full_token_length / ( context_length - extra_token_length ) )
+    print(f"Setting downsample to:{downsample} for dataset:{dataset}")
+    return downsample
+
 
 def compute_downsample_setting( X, model_name, context_length, round_to, extra_text_token_length, data_repr ):
 
