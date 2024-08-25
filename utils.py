@@ -181,6 +181,13 @@ def generate_timeseries_signal_str( num_dimensions, X, downsample_to, round_to )
         timeseries_signal_str += f"{combined_signal_string}\n"
     return timeseries_signal_str
 
+def generate_question( raw_data, target, downsample_to, round_to, dataset, split, data_repr ):
+    num_dimensions = len(raw_data)
+    timeseries_signal_str = generate_timeseries_signal_str( num_dimensions, raw_data, downsample_to, round_to )
+    answer = f"Class: '{target}'"
+    question = generate_conversation(timeseries_signal_str, answer, dataset, split, data_repr, num_dimensions, raw_data)
+    question = (question).replace("\'", "")
+    return question
 
 def generate_data(dataset, X, y, index, image_path, round_to, downsample_to, data_repr, split):
 
@@ -190,18 +197,10 @@ def generate_data(dataset, X, y, index, image_path, round_to, downsample_to, dat
         image_filename_id = f"image_{index[n]}"
         image_filename_path = f"{image_path}/image_{index[n]}.png"
 
-        num_dimensions = len(X[n])
-
-        timeseries_signal_str = generate_timeseries_signal_str( num_dimensions, X[n], downsample_to, round_to )
-
-        target = str(y[n])
-        answer = f"Class: {target}"
-
-        question = generate_conversation(timeseries_signal_str, answer, dataset, split, data_repr, num_dimensions, X[n])
-        question = (question).replace("\'", "")
+        question = generate_question( X[n], y[n], downsample_to, round_to, dataset, split, data_repr )
 
         generate_graph(X[n], image_filename_path)
-
+        target = str(y[n])
         df.loc[n] = [question, target, image_filename_id, image_filename_path]
 
     return df
