@@ -41,7 +41,7 @@ def generate_conversation(timeseries_data, answer, dataset, split, data_repr_cho
             #stats = generate_stats(raw_data, num_dimensions)
             feature_str = extract_features(raw_data[0])
             #with_stats = f"""{multivariate_preface} TimeSeries data:{timeseries_data}Stats:{stats}\nQuestion:Which class is the above signal from? Class:"""
-            with_stats = f"{feature_str}\nQuestion:Which class is the above signal from? Class:"
+            with_stats = f"TimeSeries data:{timeseries_data}{feature_str}\nQuestion:Which class is the above signal from? Class:"
             return with_stats
     if num_dimensions > 1:
         return multivariate_baseline
