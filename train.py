@@ -7,6 +7,7 @@ import subprocess
 import sys
 
 from llava_cmd_generator import generate_llava_finetune_command
+from eval_model import eval_performance, one_shot
 
 '''
 Different experiments to run
@@ -33,8 +34,8 @@ def finetune( *, downsample, round_to, dataset, vlm_root, llava_root, num_epochs
 
     llava_data_dir = f"{llava_root}/playground/new_data/"
     os.system(f"mkdir -p {llava_data_dir}")
-
-    llava_dataset_dir = f"{llava_data_dir}/{dataset}_downsample_{downsample}_round_{round_to}"
+    scenario = f"{dataset}_downsample_{downsample}_round_{round_to}"
+    llava_dataset_dir = f"{llava_data_dir}/{scenario}"
     os.system(f"mkdir -p {llava_dataset_dir}")
     config["data_path"] = llava_dataset_dir
 
@@ -46,7 +47,7 @@ def finetune( *, downsample, round_to, dataset, vlm_root, llava_root, num_epochs
     config["options"]["context_length"] = context_length
     config["options"]["data_repr"] = data_repr
 
-    config_filename = f"{vlm_root}/configs/llava_config_{dataset}_downsample_{downsample}_round_{round_to}.yaml"
+    config_filename = f"{vlm_root}/configs/llava_config_{scenario}.yaml"
     with open(config_filename, "w") as f:
         yaml.dump(config, f)
     ###### Run dataset.py to generate data ##################
@@ -66,7 +67,7 @@ def finetune( *, downsample, round_to, dataset, vlm_root, llava_root, num_epochs
         llava_root = llava_root,
         train_file = train_file,
         dataset_dir = llava_dataset_dir,
-        checkpoint_name = f'{dataset}_downsample_{downsample}_round_{round_to}',
+        checkpoint_name = f'{scenario}',
         num_epochs = num_epochs,
         context_length = context_length,
         validation_file = f'{llava_dataset_dir}/validation.json'
@@ -74,6 +75,10 @@ def finetune( *, downsample, round_to, dataset, vlm_root, llava_root, num_epochs
     print(llava_finetune_cmd)
     cp = subprocess.run(llava_finetune_cmd.split(), capture_output=False)
     cp.check_returncode()
+
+    #Calculate performance
+    eval_performance(vlm_root, llava_root, scenario)
+    one_shot(f"{llava_root}/playground/new_data/{scenario}/answer.json")
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()
