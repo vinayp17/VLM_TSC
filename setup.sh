@@ -1,9 +1,10 @@
-git clone https://github.com/r-buitrago/LLaVA /code/LLaVA
+llava_root=$1
+git clone https://github.com/r-buitrago/LLaVA llava_root
 
 pip install aeon
 pip install openai
 pip install wandb
-cd /code/LLaVA
+cd $llava_root
 
 pip install --upgrade pip
 
