@@ -12,7 +12,7 @@ from scipy.ndimage import uniform_filter1d
 from scipy.interpolate import interp1d
 
 from utils import format_numbers_combined, downsample, generate_graph, generate_data, generate_data_entry
-from parameter_finder import compute_downsample_setting
+from parameter_finder import compute_downsample_setting_new
 from data_templates import DataRepresentation
 from multiprocessing import Pool
 
@@ -68,7 +68,9 @@ class UCRDataSet():
         X_train, X_test, y_train, y_test = train_test_split(self.X, self.y, test_size=0.2, random_state=42)
         X_train, X_validation, y_train, y_validation = train_test_split(X_train, y_train, test_size=0.25, random_state=21)
 
-        self.downsample_to = compute_downsample_setting(X_train[0], 'liuhaotian/llava-v1.5-7b', self.context_length, self.round_to, 300 if self.data_repr != DataRepresentation.BASELINE else 0, self.data_repr)
+        #self.downsample_to = compute_downsample_setting(X_train[0], 'liuhaotian/llava-v1.5-7b', self.context_length, self.round_to, 300 if self.data_repr != DataRepresentation.BASELINE else 0, self.data_repr)
+        #Remove split as an arg, all splits should get the same data
+        self.downsample_to = compute_downsample_setting_new(X_train[0], y_train[0], self.round_to, self.dataset, "train", self.data_repr, 'liuhaotian/llava-v1.5-7b', self.context_length)
 
         #For a given training sample
         #Check which mode are we in : BaseLine, Rationale, Signal
