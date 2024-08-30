@@ -61,7 +61,9 @@ def generate_json_configs(configurations):
                 "round_to": params["round_to"],
                 "num_epochs": params["num_epochs"],
                 "context_length": params["context_length"],
-                "data_repr": params["data_repr"]
+                "data_repr": params["data_repr"],
+                "use_adaptive_downsampling": params["use_adaptive_downsampling"],
+                "plot_downsampled_graph": params["plot_downsampled_graph"],
         }
 
     # Write the combined configuration to a single JSON file

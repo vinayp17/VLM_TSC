@@ -34,6 +34,8 @@ def finetune( *, round_to, dataset, vlm_root, llava_root, num_epochs, context_le
     config["options"]["downsample_to"] = None
     config["options"]["context_length"] = context_length
     config["options"]["data_repr"] = data_repr
+    config["options"]["use_adaptive_downsampling"] = use_adaptive_downsampling
+    config["options"]["plot_downsampled_graph"] = plot_downsampled_graph
 
     config_filename = f"{vlm_root}/configs/llava_config_{scenario}.yaml"
     with open(config_filename, "w") as f:
@@ -77,8 +79,8 @@ if __name__ == "__main__":
     argparser.add_argument("--num-epochs", type=int, default=2)
     argparser.add_argument("--context-length", type=int, default=2048)
     argparser.add_argument("--data-repr", type=str, choices=["BASELINE", "WITH_RATIONALE", "WITH_SIGNAL_ANALYSIS", "WITH_STATS"], required=True)
-    argparser.add_argument("--use-adaptive-downsampling", type=bool, action='store_true', default=False)
-    argparser.add_argument("--plot-downsampled-graph", type=bool, action='store_true', default=False)
+    argparser.add_argument("--use-adaptive-downsampling", action='store_true', default=False)
+    argparser.add_argument("--plot-downsampled-graph", action='store_true', default=False)
     argparser.add_argument("--scenario", type=str, required=True, help="Experiment scenario to run for")
     args = argparser.parse_args()
     finetune(
