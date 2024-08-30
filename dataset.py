@@ -70,8 +70,19 @@ class UCRDataSet():
 
         #self.downsample_to = compute_downsample_setting(X_train[0], 'liuhaotian/llava-v1.5-7b', self.context_length, self.round_to, 300 if self.data_repr != DataRepresentation.BASELINE else 0, self.data_repr)
         #Remove split as an arg, all splits should get the same data
-        self.downsample_to = compute_downsample_setting_new(X_train[0], y_train[0], self.round_to, self.dataset, "train", self.data_repr, 'liuhaotian/llava-v1.5-7b', self.context_length)
-
+        self.downsample_to = compute_downsample_setting_new(self.X[0], self.y[0], self.round_to, self.dataset, "train", self.data_repr, 'liuhaotian/llava-v1.5-7b', self.context_length)
+        for i in range(1, len(self.X)):
+            potential_downsample = compute_downsample_setting_new(self.X[i], self.y[i], self.round_to, self.dataset, "train", self.data_repr, 'liuhaotian/llava-v1.5-7b', self.context_length)
+            if potential_downsample is None:
+                continue
+            if self.downsample_to is None:
+                self.downsample_to = potential_downsample
+                continue
+            assert self.downsample_to is not None
+            assert potential_downsample is not None
+            if potential_downsample > self.downsample_to:
+                print(f"Switching downsample from:{self.downsample_to} to:{potential_downsample}")
+                self.downsample_to = potential_downsample
         #For a given training sample
         #Check which mode are we in : BaseLine, Rationale, Signal
         #Check what is the maximum token length for the original timeseries in the given mode

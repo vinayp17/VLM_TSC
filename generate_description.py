@@ -5,11 +5,12 @@ from stats import TimeSeriesStats
 import numpy as np
 import os
 
-# Set your OpenAI API key
-API_KEY=os.environ['OPENAIAPI_KEY']
-openai.api_key = API_KEY
+
 
 def query_openai( prompt ):
+    # Set your OpenAI API key
+    API_KEY=os.environ['OPENAIAPI_KEY']
+    openai.api_key = API_KEY
 
     # Make a request to the OpenAI API
     client = OpenAI(api_key=API_KEY)

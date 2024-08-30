@@ -2,6 +2,8 @@ import argparse
 import pandas as pd
 import os
 import json
+import shlex
+import subprocess
 
 def launch_experiments(
     vlm_root,
@@ -47,6 +49,13 @@ def launch_experiments(
         data_repr = config_json[scenario]["data_repr"]
         train_cmd = f"python {train_file} --round_to {round_to} --dataset {dataset} --vlm-root {vlm_root} --llava-root {llava_root} --num-epochs {num_epochs} --context-length {context_length} --data-repr {data_repr} --scenario {scenario}"
         print(train_cmd)
+        command_list = shlex.split(train_cmd)
+        env = os.environ.copy()
+        try:
+            subprocess.run(command_list, env=env, check=True)
+            print("Command executed success")
+        except Exception as e:
+            print(f"An error occurred: {e}")   
 
 if __name__ == "__main__":
     argparser = argparse.ArgumentParser()

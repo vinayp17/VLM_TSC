@@ -1,10 +1,11 @@
 import os
 
-def one_shot( answers ):
+def one_shot( dataset, answers ):
     import pandas as pd
     import numpy as np
     ans_df = pd.read_json(answers, lines=True)
     print(np.mean(ans_df['answer'] == ans_df['ground_truth']))
+    print(f"Accuracy for dataset:{dataset}={np.mean(ans_df['answer'] == ans_df['ground_truth'])}")
 
 def eval_performance(vlm_root, llava_root, scenario ):
     model_vqa_script = f"{vlm_root}/model_vqa.py"
@@ -24,4 +25,4 @@ def eval_performance(vlm_root, llava_root, scenario ):
 
 if __name__ == "__main__":
    eval_performance("/code/VLM-TSC", "/code/LLaVA" , "CinCECGTorso_downsample_0_round_2")
-   one_shot("/code/LLaVA/playground/new_data/CinCECGTorso_downsample_0_round_2/answer.json")
+   one_shot("CinCECGTorso", "/code/LLaVA/playground/new_data/CinCECGTorso_downsample_0_round_2/answer.json")

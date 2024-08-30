@@ -4,6 +4,7 @@ and returns the right downsampling parameter to use
 """
 
 import re
+import math
 from utils import format_numbers_combined, generate_question
 from data_templates import DataRepresentation
 from analyze_tokens import analyze_token_length
@@ -27,7 +28,7 @@ def compute_downsample_setting_new( raw_data, target, round_to, dataset, split, 
     if full_token_length < context_length:
         pass
     else:
-        downsample = round( full_token_length / ( context_length - extra_token_length ) )
+        downsample = math.ceil( full_token_length / ( context_length - extra_token_length ) )
     print(f"Setting downsample to:{downsample} for dataset:{dataset}")
     return downsample
 
