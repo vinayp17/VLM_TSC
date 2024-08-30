@@ -6,27 +6,50 @@ configurations = {
         "round_to": 2,
         "num_epochs": 2,
         "context_length": 2048,
-        "data_repr": "BASELINE"
+        "data_repr": "BASELINE",
+        "use_adaptive_downsampling" : False,
+        "plot_downsampled_graph" : False,
     },
     "BASELINE_4096": {
         "round_to": 2,
         "num_epochs": 2,
         "context_length": 4096,
-        "data_repr": "BASELINE"
+        "data_repr": "BASELINE",
+        "use_adaptive_downsampling" : False,
+        "plot_downsampled_graph" : False
     },
     "WITH_STATS_2048": {
         "round_to": 2,
         "num_epochs": 2,
         "context_length": 2048,
-        "data_repr": "WITH_STATS"
+        "data_repr": "WITH_STATS",
+        "use_adaptive_downsampling" : False,
+        "plot_downsampled_graph" : False
     },
     "WITH_STATS_4096": {
         "round_to": 2,
         "num_epochs": 2,
         "context_length": 4096,
-        "data_repr": "WITH_STATS"
+        "data_repr": "WITH_STATS",
+        "use_adaptive_downsampling" : False,
+        "plot_downsampled_graph" : False
+    },
+    "BASELINE_2048_adaptive_ds_plot_ds": {
+        "round_to": 2,
+        "num_epochs": 2,
+        "context_length": 2048,
+        "data_repr": "BASELINE",
+        "use_adaptive_downsampling" : True,
+        "plot_downsampled_graph" : True,
+    },
+    "BASELINE_2048_adaptive_ds": {
+        "round_to": 2,
+        "num_epochs": 2,
+        "context_length": 2048,
+        "data_repr": "BASELINE",
+        "use_adaptive_downsampling" : True,
+        "plot_downsampled_graph" : False,
     }
-
 }
 
 # Function to generate JSON files for each configuration
