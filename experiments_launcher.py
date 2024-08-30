@@ -47,7 +47,14 @@ def launch_experiments(
         num_epochs = config_json[scenario]["num_epochs"]
         context_length = config_json[scenario]["context_length"]
         data_repr = config_json[scenario]["data_repr"]
-        train_cmd = f"python {train_file} --round_to {round_to} --dataset {dataset} --vlm-root {vlm_root} --llava-root {llava_root} --num-epochs {num_epochs} --context-length {context_length} --data-repr {data_repr} --scenario {scenario}"
+        use_adaptive_downsampling = config_json[scenario]["use_adaptive_downsampling"]
+        plot_downsampled_graph = config_json[scenario]["plot_downsampled_graph"]
+        extra_args = ""
+        if use_adaptive_downsampling:
+            extra_args += "--use-adaptive-downsampling "
+        if plot_downsampled_graph:
+            extra_args += "--plot-downsampled-graph"
+        train_cmd = f"python {train_file} --round_to {round_to} --dataset {dataset} --vlm-root {vlm_root} --llava-root {llava_root} --num-epochs {num_epochs} --context-length {context_length} --data-repr {data_repr} --scenario {scenario} {extra_args}"
         print(train_cmd)
         command_list = shlex.split(train_cmd)
         env = os.environ.copy()
