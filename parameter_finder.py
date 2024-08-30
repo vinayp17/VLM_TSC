@@ -10,9 +10,9 @@ from data_templates import DataRepresentation
 from analyze_tokens import analyze_token_length
 from aeon.datasets import load_classification
 
-def compute_downsample_setting_new( raw_data, target, round_to, dataset, split, data_repr, model_name, context_length ):
+def compute_downsample_setting_new( raw_data, target, round_to, dataset, split, data_repr, model_name, context_length, use_adaptive_downsampling):
     downsample = None
-    question = generate_question( raw_data, target, None, round_to, dataset, split, data_repr )
+    question = generate_question( raw_data, target, None, round_to, dataset, split, data_repr, use_adaptive_downsampling )
     full_token_length, _ = analyze_token_length(question, model_name)
     pattern = r'\[\s*([^\]]+)\s*\]'
     match = re.search(pattern, question)

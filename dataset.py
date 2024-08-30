@@ -23,10 +23,9 @@ import yaml
 from preprocess import load_birds
 import sys
 
-
-def process_chunk(chunk_data, image_path,  round_to, downsample_to, data_repr, split, dataset):
+def process_chunk(chunk_data, image_path,  round_to, downsample_to, data_repr, split, dataset, use_adaptive_downsampling, plot_downsampled_graph):
     data_subset, label_subset, index_subset, = chunk_data
-    return generate_data(dataset, data_subset, label_subset, index_subset, image_path, round_to, downsample_to, data_repr, split)
+    return generate_data(dataset, data_subset, label_subset, index_subset, image_path, round_to, downsample_to, data_repr, split, use_adaptive_downsampling, plot_downsampled_graph)
 
 class UCRDataSet():
     def __init__(self, dataset, image_path, data_path, context_length, data_repr):
@@ -38,6 +37,8 @@ class UCRDataSet():
 
         self.round_to = None
         self.downsample_to = None
+        self.use_adaptive_downsampling = None
+        self.plot_downsampled_graph = None
         self.padded = False
 
         if dataset == "birds":
@@ -59,7 +60,7 @@ class UCRDataSet():
 
         with Pool() as pool:
             from functools import partial
-            func = partial(process_chunk, image_path=self.image_path, round_to=self.round_to, downsample_to=self.downsample_to, data_repr=self.data_repr,split=split, dataset=self.dataset)
+            func = partial(process_chunk, image_path=self.image_path, round_to=self.round_to, downsample_to=self.downsample_to, data_repr=self.data_repr,split=split, dataset=self.dataset, use_adaptive_downsampling=self.use_adaptive_downsampling, plot_downsampled_graph=self.plot_downsampled_graph)
             results = pool.map(func, chunks)
 
         return pd.concat(results, axis=0)
@@ -70,6 +71,7 @@ class UCRDataSet():
 
         #self.downsample_to = compute_downsample_setting(X_train[0], 'liuhaotian/llava-v1.5-7b', self.context_length, self.round_to, 300 if self.data_repr != DataRepresentation.BASELINE else 0, self.data_repr)
         #Remove split as an arg, all splits should get the same data
+        '''
         self.downsample_to = compute_downsample_setting_new(self.X[0], self.y[0], self.round_to, self.dataset, "train", self.data_repr, 'liuhaotian/llava-v1.5-7b', self.context_length)
         for i in range(1, len(self.X)):
             potential_downsample = compute_downsample_setting_new(self.X[i], self.y[i], self.round_to, self.dataset, "train", self.data_repr, 'liuhaotian/llava-v1.5-7b', self.context_length)
@@ -83,6 +85,9 @@ class UCRDataSet():
             if potential_downsample > self.downsample_to:
                 print(f"Switching downsample from:{self.downsample_to} to:{potential_downsample}")
                 self.downsample_to = potential_downsample
+        '''
+        self.downsample_to = compute_downsample_setting_new(X_train[0], y_train[0], self.round_to, self.dataset, "train", self.data_repr, 'liuhaotian/llava-v1.5-7b', self.context_length, self.use_adaptive_downsampling)
+
         #For a given training sample
         #Check which mode are we in : BaseLine, Rationale, Signal
         #Check what is the maximum token length for the original timeseries in the given mode
@@ -125,6 +130,8 @@ def main():
     model = config['model']
     padded = config['options']['padded']
     round_to = config['options']['round_to']
+    use_adaptive_downsampling = config['options']['use_adaptive_downsampling']
+    plot_downsampled_graph = config['options']['plot_downsampled_graph']
     downsample_to = config['options']['downsample_to']
     context_length = config['options']['context_length']
     data_repr = config['options']['data_repr']
@@ -141,6 +148,8 @@ def main():
 
     dataset = UCRDataSet(dataset_name, image_path, data_path, context_length, data_repr)
     dataset.round_to = round_to
+    dataset.use_adaptive_downsampling = use_adaptive_downsampling
+    dataset.plot_downsampled_graph = plot_downsampled_graph
     dataset.downsample_to = downsample_to
     dataset.padded = padded
 

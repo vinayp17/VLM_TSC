@@ -13,6 +13,7 @@ from scipy.interpolate import interp1d
 
 import pandas as pd
 from data_templates import generate_conversation, DataRepresentation
+from adaptive_downsampling import adaptive_downsample
 
 def generate_llava_qa_entry(question, target, image_filename_id, image_filename_path):
 
@@ -167,12 +168,16 @@ def format_numbers_combined(numbers, round_to=None):
 
     return formatted_numbers
 
-def generate_timeseries_signal_str( num_dimensions, X, downsample_to, round_to ):
+def generate_timeseries_signal_str( num_dimensions, X, downsample_to, round_to, use_adaptive_downsampling ):
     timeseries_signal_str = ""
 
     for dimension in range(0, num_dimensions):
         if downsample_to is not None:
-            combined_signal_string = format_numbers_combined(downsample(X[dimension], downsample_to), round_to=round_to)
+            if use_adaptive_downsampling:
+                signal = adaptive_downsample(X[dimension], downsample_to)
+            else:
+                signal = downsample(X[dimension], downsample_to)
+            combined_signal_string = format_numbers_combined(signal, round_to=round_to)
         else:
             combined_signal_string = format_numbers_combined(X[dimension], round_to=round_to)
 
@@ -181,15 +186,15 @@ def generate_timeseries_signal_str( num_dimensions, X, downsample_to, round_to )
         timeseries_signal_str += f"{combined_signal_string}\n"
     return timeseries_signal_str
 
-def generate_question( raw_data, target, downsample_to, round_to, dataset, split, data_repr ):
+def generate_question( raw_data, target, downsample_to, round_to, dataset, split, data_repr, use_adaptive_downsampling ):
     num_dimensions = len(raw_data)
-    timeseries_signal_str = generate_timeseries_signal_str( num_dimensions, raw_data, downsample_to, round_to )
+    timeseries_signal_str = generate_timeseries_signal_str( num_dimensions, raw_data, downsample_to, round_to, use_adaptive_downsampling )
     answer = f"Class: '{target}'"
     question = generate_conversation(timeseries_signal_str, answer, dataset, split, data_repr, num_dimensions, raw_data)
     question = (question).replace("\'", "")
     return question
 
-def generate_data(dataset, X, y, index, image_path, round_to, downsample_to, data_repr, split):
+def generate_data(dataset, X, y, index, image_path, round_to, downsample_to, data_repr, split, use_adaptive_downsampling, plot_downsampled_graph):
 
     df = pd.DataFrame(columns=['question', 'target', 'image_filename_id', 'image_filename_path'])
 
@@ -197,9 +202,12 @@ def generate_data(dataset, X, y, index, image_path, round_to, downsample_to, dat
         image_filename_id = f"image_{index[n]}"
         image_filename_path = f"{image_path}/image_{index[n]}.png"
 
-        question = generate_question( X[n], y[n], downsample_to, round_to, dataset, split, data_repr )
-
-        generate_graph(X[n], image_filename_path)
+        question = generate_question( X[n], y[n], downsample_to, round_to, dataset, split, data_repr, use_adaptive_downsampling )
+        signal_to_plot = X[n]
+        if plot_downsampled_graph:
+            #Assume single dimension
+            signal_to_plot = adaptive_downsample(X[n][0], downsample_to) if use_adaptive_downsampling else downsample(X[n][0], downsample_to)
+        generate_graph(signal_to_plot, image_filename_path)
         target = str(y[n])
         df.loc[n] = [question, target, image_filename_id, image_filename_path]
 
